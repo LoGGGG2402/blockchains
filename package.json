@@ -1,0 +1,22 @@
+{
+  "name": "blockchains",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "hardhat": "hardhat node",
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:local": "hardhat run scripts/deploy.js --network localhost",
+    "deploy:spolia": "hardhat run scripts/deploy.js --network spolia"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "hardhat": "^2.22.4"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.2"
+  }
+}
