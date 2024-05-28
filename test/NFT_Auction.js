@@ -16,7 +16,7 @@ describe("NFTAuction", function () {
         const AuctionToken = await hre.ethers.getContractFactory("NFTAuctionToken")
         const auctionToken = await AuctionToken.deploy(deployer.address)
 
-        // console.log("AuctionsPage deployed to:", auction.target)
+        // console.log("AuctionsPage.jsx deployed to:", auction.target)
         // console.log("AuctionToken deployed to:", auctionToken.target)
 
         const MyNFT = await hre.ethers.getContractFactory("OnePieceNFT")
@@ -104,7 +104,7 @@ describe("NFTAuction", function () {
     //         uint256 duration
     //     )
 
-    //     struct AuctionsPage {
+    //     struct AuctionsPage.jsx {
     //         address auctioneer;
     //         IERC721 nftContract;
     //         uint256 nftId;

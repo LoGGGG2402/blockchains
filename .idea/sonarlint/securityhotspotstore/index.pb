@@ -29,3 +29,48 @@ G
 front-end/src/index.css,d/6/d6571226c1a00451d5f032737f8af5893373bfea
 E
 front-end/src/App.css,6/d/6d40b4608edc10a569e177f7c68ae5682d0aab06
+:
+
+.gitignore,a/5/a5cc2925ca8258af241be7e5b0381edf30266302
+9
+	README.md,8/e/8ec9a00bfd09b3190ac6b22251dbb1aa95a0579d
+C
+front-end/README.md,1/2/1259f326526e24ae39df2171bfb5e6ef87596594
+E
+front-end/src/App.jsx,6/a/6a2ac665138cfd79e9c5f125d3c5dbfd3476e322
+_
+/front-end/src/assets/contracts/OnePieceNFT.json,c/2/c236da8a66cd1aacf78cd3d1a134676aab578d1f
+4
+.env,3/c/3c84dcdc6bbe3d7817c49dcdc327b926fea1808a
+G
+scripts/deploy_local.js,e/8/e8e905d2056f88e4c72a4a0c03ca2294b7ff8f4f
+A
+hardhat.config.js,4/2/429ab70247c64d2d87d4dac6787a6e4a9fb2ede2
+O
+ignition/modules/OnepieceNFT.js,5/0/50cdb0414d160a863ed31adb73ad58fd07391bd5
+S
+#front-end/src/components/Navbar.jsx,c/9/c9b42887cc4c3fd54a1f482e2f5ebb7439eb73b8
+U
+%front-end/src/pages/CreateNFTPage.jsx,7/5/757c8840e7c193978b93baa85e0aae80a96aa0e0
+P
+ front-end/src/components/NFT.jsx,e/9/e9342cde8256b024df699571fb0ef2b4070abe2b
+K
+front-end/src/pages/NFTPage,4/e/4e0a2defb9625cc19014e5674df56892c5932540
+O
+front-end/src/pages/NFTPage.jsx,b/d/bde5613c6d7335b72dc80a2c5ba20ab20e853749
+P
+ front-end/src/pages/NFTsPage.jsx,e/3/e37467abcd8ccea26d6d1e40d30360590c30b7d6
+P
+ front-end/src/pages/AuctionsPage,3/a/3a3e297b923d460c08fd816924a9d3bd9d4375cc
+T
+$front-end/src/components/Auction.jsx,3/6/36c500f6643ea24c80bda10ae30e726c19bfb0bf
+K
+front-end/package-lock.json,b/1/b10eb5280c6c75e013aabf2c26e715af70092813
+A
+package-lock.json,f/a/fa288d1472d29beccb489a676f68739ad365fc47
+D
+front-end/index.html,6/c/6c2e067cb1299f9afaa982f2e766217ba2357ea7
+T
+$front-end/src/pages/AuctionsPage.jsx,7/8/78bc91d781d900ee447c0ba39e2cbc8c7d755a16
+?
+blockchains.iml,1/f/1f40b4025714b50d858fb45e897d5373f3cb47dc

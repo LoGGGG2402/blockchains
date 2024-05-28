@@ -1,35 +1,36 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import {useEffect, useState} from 'react'
 import './App.css'
+import {BrowserRouter as Router, Route, Routes} from "react-router-dom";
+
+import Navbar from "./components/Navbar.jsx";
+import CreateNFTPage from "./pages/CreateNFTPage.jsx";
+import NFTsPage from "./pages/NFTsPage.jsx";
+
+
 
 function App() {
-  const [count, setCount] = useState(0)
+    const [signer, setSigner] = useState(null);
+    const [network, setNetwork] = useState(null);
 
-  return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    const [nftForm, setNftForm] = useState({
+        name: "",
+        description: "",
+        image: null
+    });
+
+
+    return (
+        <Router>
+                <Navbar signer={signer} setSigner={setSigner} network={network} setNetwork={setNetwork}/>
+
+            <Routes>
+                {/*<Route path="/" element={<NFTsPage/>}/>*/}
+                <Route path="/my-nft" element={<NFTsPage signer={signer}/>}/>
+                {/*<Route path="/auction" element={<AuctionsPage.jsx/>}/>*/}
+                <Route path="/create-nft" element={<CreateNFTPage signer={signer}/>}/>
+            </Routes>
+        </Router>
+    )
 }
 
 export default App
