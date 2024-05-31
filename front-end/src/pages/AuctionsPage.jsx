@@ -1,13 +1,10 @@
-import {useEffect, useState} from "react";
-import {ethers} from "ethers";
-
+import { useEffect, useState } from "react";
+import { ethers } from "ethers";
 import Auction from "../components/Auction.jsx";
-
 import NFTAuction from "../assets/contracts/NFTAuction.json";
 import NFTAuctionToken from "../assets/contracts/NFTAuctionToken.json";
 
-
-function AuctionsPage({signer}){
+function AuctionsPage({ signer }) {
     let [auctions, setAuctions] = useState([]);
     let [auctionsTokens, setAuctionsTokens] = useState([]);
 
@@ -18,41 +15,49 @@ function AuctionsPage({signer}){
                 return;
             }
             const provider = new ethers.providers.Web3Provider(window.ethereum);
-            const NFTAuctionContract = new ethers.Contract(
-                NFTAuction.address,
-                NFTAuction.abi,
-                provider
-            );
-            const NFTAuctionTokenContract = new ethers.Contract(
-                NFTAuctionToken.address,
-                NFTAuctionToken.abi,
-                provider
-            );
-            const onGoingAuctions = await NFTAuctionContract.getOngoingAuctions();
-            const onGoingAuctionsTokens = await NFTAuctionTokenContract.getOngoingAuctions();
-            console.log("On Going Auctions:", onGoingAuctions);
-            console.log("On Going Auctions Tokens:", onGoingAuctionsTokens);
 
-            for (let i = 0; i < onGoingAuctions.length; i++) {
-                const auction = {
-                    auctionContract: NFTAuctionContract,
-                    auctionId: onGoingAuctions[i],
-                };
-                setAuctions((auctions) => [...auctions, auction]);
+            let NFTAuctionContract;
+            let NFTAuctionTokenContract;
+
+            try {
+                NFTAuctionContract = new ethers.Contract(
+                    NFTAuction.address,
+                    NFTAuction.abi,
+                    provider
+                );
+                NFTAuctionTokenContract = new ethers.Contract(
+                    NFTAuctionToken.address,
+                    NFTAuctionToken.abi,
+                    provider
+                );
+            } catch (error) {
+                console.error("Error creating contract instances:", error);
+                return;
             }
 
-            for (let i = 0; i < onGoingAuctionsTokens.length; i++) {
-                const auctionToken = {
+            try {
+                const onGoingAuctions = await NFTAuctionContract.getOngoingAuctions();
+                const onGoingAuctionsTokens = await NFTAuctionTokenContract.getOngoingAuctions();
+
+                const auctionsList = onGoingAuctions.map(auctionId => ({
+                    auctionContract: NFTAuctionContract,
+                    auctionId
+                }));
+
+                const auctionsTokensList = onGoingAuctionsTokens.map(auctionId => ({
                     auctionContract: NFTAuctionTokenContract,
-                    auctionId: onGoingAuctionsTokens[i],
-                };
-                setAuctionsTokens((auctionsTokens) => [...auctionsTokens, auctionToken]);
+                    auctionId
+                }));
+
+                setAuctions(auctionsList);
+                setAuctionsTokens(auctionsTokensList);
+            } catch (error) {
+                console.error("Error fetching auctions:", error);
             }
         };
-        fetchAuctions().then()
-    }, []);
 
-
+        fetchAuctions();
+    }, [signer]);
 
     return (
         <>
@@ -79,8 +84,7 @@ function AuctionsPage({signer}){
                 ))}
             </div>
         </>
-    )
-
+    );
 }
 
-export default AuctionsPage
+export default AuctionsPage;

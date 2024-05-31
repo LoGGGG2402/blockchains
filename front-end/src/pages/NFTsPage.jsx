@@ -30,6 +30,9 @@ function NFTsPage({ signer }) {
                     };
                 });
                 const nftsData = await Promise.all(promises);
+                // set nfts that owned by the signer
+                nftsData.filter(nft => nft.owner === signer._address);
+                console.log(signer._address)
                 setNfts(nftsData);
             } catch (error) {
                 console.error("Error fetching data:", error);
@@ -99,12 +102,12 @@ function NFTsPage({ signer }) {
             alert("Please install MetaMask!");
             return;
         }
-        let provider = new ethers.providers.Web3Provider(window.ethereum);
         let ERC721abi = [
             "function tokenURI(uint256 tokenId) view returns (string)",
             "function approve(address to, uint256 tokenId)",
             "function balanceOf(address owner) view returns (uint256)",
             "function ownerOf(uint256 tokenId) view returns (address)",
+            "function getApproved(uint256 tokenId) view returns (address)"
         ];
 
         const NFTContract = new ethers.Contract(nftAddress, ERC721abi, signer);
@@ -162,7 +165,12 @@ function NFTsPage({ signer }) {
         if (formValues) {
             try {
                 if (formValues.paymentToken === "" || formValues.paymentToken === null || formValues.paymentToken === undefined) {
-                    await NFTContract.approve(NFTAuction.address, nftTokenId);
+                    let isApproved = await NFTContract.getApproved(nftTokenId);
+                    if (isApproved !== NFTAuction.address) {
+                        Swal.fire("Please approve NFTAuction contract to manage your NFT!", "", "error");
+                        await NFTContract.approve(NFTAuction.address, nftTokenId);
+                        return;
+                    }
                     console.log("approved")
                     const NFTAuctionContract = new ethers.Contract(NFTAuction.address, NFTAuction.abi, signer);
                     console.log("NFTAuctionContract", NFTAuctionContract)

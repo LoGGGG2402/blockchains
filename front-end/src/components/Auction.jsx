@@ -8,8 +8,8 @@ function Auction({ auctionContract, auctionId, signer }) {
     const [endTime, setEndTime] = useState(0);
     const [ended, setEnded] = useState(false);
     const [winnerBid, setWinnerBid] = useState(0);
+    const [myBid, setMyBid] = useState(0);
     const [symbol, setSymbol] = useState("");
-    const [myBalance, setMyBalance] = useState(0);
 
     // const [nftContract, setNftContract] = useState(null);
     const [paymentContract, setPaymentContract] = useState(null);
@@ -27,7 +27,6 @@ function Auction({ auctionContract, auctionId, signer }) {
             try {
                 const provider = new ethers.providers.Web3Provider(window.ethereum);
                 const auctionInfo = await auctionContract.getAuctionDetails(auctionId);
-                console.log("Auction Info:", auctionInfo);
                 const { auctioneer, nftContract, nftId, endTime, ended, winnerBid, paymentToken } = auctionInfo;
                 setAuctioneer(auctioneer);
                 setEndTime(endTime);
@@ -41,7 +40,6 @@ function Auction({ auctionContract, auctionId, signer }) {
                 ];
 
                 const contract = new ethers.Contract(nftContract, ERC721abi, provider);
-                setNftContract(contract);
 
                 const uri = await contract.tokenURI(nftId);
                 const response = await axios.get(uri);
@@ -51,12 +49,14 @@ function Auction({ auctionContract, auctionId, signer }) {
                     image: response.data.image,
                 };
 
-                setNft(nft);
 
+                const myBid = await auctionContract.getBidPrice(auctionId);
+                setMyBid(myBid.toNumber());
+
+                setNft(nft);
                 if (!paymentToken) {
-                    const myBalance = await provider.getBalance(signer._address);
-                    setMyBalance(Number(ethers.utils.formatEther(myBalance)));
-                    setWinnerBid(Number(ethers.utils.formatEther(winnerBid)));
+                    console.log("Winner Bid:", winnerBid);
+                    setWinnerBid(winnerBid.toNumber());
                     setSymbol("ETH");
                 } else {
                     const ERC20abi = [
@@ -73,8 +73,6 @@ function Auction({ auctionContract, auctionId, signer }) {
 
                     const symbol = await tokenContract.symbol();
                     const decimals = await tokenContract.decimals();
-                    const myBalance = await tokenContract.balanceOf(signer._address);
-                    setMyBalance(Number(ethers.utils.formatUnits(myBalance, decimals)));
 
                     setSymbol(symbol);
                     setWinnerBid(Number(ethers.utils.formatUnits(winnerBid, decimals)));
@@ -86,7 +84,9 @@ function Auction({ auctionContract, auctionId, signer }) {
             }
         };
 
-        fetchAuctionDetails();
+        fetchAuctionDetails().then(() => {
+            console.log("Auction details fetched successfully!");
+        })
     }, [auctionContract, auctionId, signer]);
 
     const placeBid = async () => {
@@ -94,8 +94,6 @@ function Auction({ auctionContract, auctionId, signer }) {
             alert("Please install MetaMask!");
             return;
         }
-
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
         const contractWithSigner = auctionContract.connect(signer);
 
         try {
@@ -160,7 +158,7 @@ function Auction({ auctionContract, auctionId, signer }) {
                             Winner Bid: {winnerBid} {symbol}
                         </span>
                         <span className="block bg-green-200 rounded-full px-3 py-1 text-sm font-semibold text-green-700 mr-2 mb-2">
-                            My Balance: {myBalance} {symbol}
+                            My Bid: {myBid} {symbol}
                         </span>
                         <button
                             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
