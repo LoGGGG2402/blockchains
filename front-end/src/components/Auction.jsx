@@ -7,11 +7,10 @@ function Auction({ auctionContract, auctionId, signer }) {
     const [auctioneer, setAuctioneer] = useState("");
     const [endTime, setEndTime] = useState(0);
     const [ended, setEnded] = useState(false);
-    const [winnerBid, setWinnerBid] = useState(0);
-    const [myBid, setMyBid] = useState(0);
+    const [winnerBid, setWinnerBid] = useState("");
+    const [myBid, setMyBid] = useState("");
     const [symbol, setSymbol] = useState("");
 
-    // const [nftContract, setNftContract] = useState(null);
     const [paymentContract, setPaymentContract] = useState(null);
 
     const [loading, setLoading] = useState(false);
@@ -51,12 +50,12 @@ function Auction({ auctionContract, auctionId, signer }) {
 
 
                 const myBid = await auctionContract.getBidPrice(auctionId);
-                setMyBid(myBid.toNumber());
+                setMyBid(ethers.utils.formatEther(myBid));
 
                 setNft(nft);
                 if (!paymentToken) {
                     console.log("Winner Bid:", winnerBid);
-                    setWinnerBid(winnerBid.toNumber());
+                    setWinnerBid(ethers.utils.formatEther(winnerBid));
                     setSymbol("ETH");
                 } else {
                     const ERC20abi = [
