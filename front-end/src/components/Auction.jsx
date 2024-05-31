@@ -203,7 +203,7 @@ function Auction({ auctionContract, auctionId, signer }) {
                                 >
                                     End Auction
                                 </button>
-                                {ended && (
+                                {!ended && (
                                 <button
                                     className="mt-2 w-full bg-blue-500 hover:bg-gray-700 text-white font-bold py-1 px-2 rounded transition duration-300"
                                     onClick={cancelAuction}
