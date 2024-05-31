@@ -6,17 +6,17 @@ async function main() {
     let [deployer] = await hre.ethers.getSigners()
     console.log("Deploying contracts with the account:", deployer.address)
     const Auction = await hre.ethers.getContractFactory("NFTAuction")
-    const auction = await Auction.deploy(deployer.address)
+    const auction = await Auction.deploy()
 
     const AuctionToken = await hre.ethers.getContractFactory("NFTAuctionToken")
-    const auctionToken = await AuctionToken.deploy(deployer.address)
+    const auctionToken = await AuctionToken.deploy()
 
     // const Token = await hre.ethers.getContractFactory("Token")
     // const token = await Token.deploy(deployer.address)
 
     // deploy OnePieceNFT contract
     const OP_NFT = await hre.ethers.getContractFactory("OnePieceNFT")
-    const op_nft = await OP_NFT.deploy(deployer.address)
+    const op_nft = await OP_NFT.deploy()
 
     console.log("OnePieceNFT deployed to:", op_nft.target)
     console.log("NFTAuction deployed to:", auction.target)

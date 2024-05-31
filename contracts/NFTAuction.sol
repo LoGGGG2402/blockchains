@@ -4,31 +4,28 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-contract NFTAuctionToken is IERC721Receiver, ReentrancyGuard {
+contract NFTAuction is IERC721Receiver, ReentrancyGuard {
     using Address for address;
-    using SafeERC20 for IERC20;
 
     uint256 public _auctionIdCounter;
     address public _organizer;
 
     uint256 public constant EXTENSION_DURATION = 10 minutes; // if bid in last 10 mins
     uint256 public constant AUCTION_SERVICE_FEE_RATE = 3; // Percentage
+    uint256 public constant MINIMUM_BID_RATE = 110; // Percentage
 
     struct Auction {
         address auctioneer;
         IERC721 nftContract;
         uint256 nftId;
-        IERC20 tokenPayment;
-        uint256 initialPrice;
         uint256 endTime;
         bool ended;
         uint256 highestBid;
-        address winner;
         uint256 winnerBid;
+        address winner;
     }
 
     mapping(uint256 => Auction) private _auctions;
@@ -38,7 +35,6 @@ contract NFTAuctionToken is IERC721Receiver, ReentrancyGuard {
         uint256 auctionId,
         address nftContract,
         uint256 nftId,
-        address tokenPayment,
         uint256 initialPrice,
         uint256 endTime
     );
@@ -50,8 +46,8 @@ contract NFTAuctionToken is IERC721Receiver, ReentrancyGuard {
     event AuctionCancelled(uint256 auctionId);
     event BidCancelled(uint256 auctionId, address bidder);
 
-    constructor(address initialOrganizer) {
-        _organizer = initialOrganizer;
+    constructor() {
+        _organizer = msg.sender;
         _auctionIdCounter = 1;
     }
 
@@ -66,10 +62,9 @@ contract NFTAuctionToken is IERC721Receiver, ReentrancyGuard {
     function createAuction(
         address nftContract,
         uint256 nftId,
-        address tokenPayment,
         uint256 initialPrice,
         uint256 duration
-    ) public {
+    ) public returns (uint256){
         require(
             nftContract != address(0),
             "NFTAuction: Invalid NFT contract address"
@@ -87,10 +82,6 @@ contract NFTAuctionToken is IERC721Receiver, ReentrancyGuard {
             "NFTAuction: Not the owner of the NFT"
         );
         require(
-            tokenPayment != address(0),
-            "NFTAuction: Invalid token contract address"
-        );
-        require(
             initialPrice > 0,
             "NFTAuction: Reserve price must be greater than zero"
         );
@@ -100,7 +91,6 @@ contract NFTAuctionToken is IERC721Receiver, ReentrancyGuard {
         );
 
         IERC721 _nftContract = IERC721(nftContract);
-        IERC20 _tokenPayment = IERC20(tokenPayment);
         _nftContract.safeTransferFrom(msg.sender, address(this), nftId);
 
         uint256 endTime = block.timestamp + duration;
@@ -111,8 +101,6 @@ contract NFTAuctionToken is IERC721Receiver, ReentrancyGuard {
             auctioneer: msg.sender,
             nftContract: _nftContract,
             nftId: nftId,
-            tokenPayment: _tokenPayment,
-            initialPrice: initialPrice,
             endTime: endTime,
             ended: false,
             highestBid: initialPrice,
@@ -126,31 +114,26 @@ contract NFTAuctionToken is IERC721Receiver, ReentrancyGuard {
             auctionId,
             nftContract,
             nftId,
-            tokenPayment,
             initialPrice,
             endTime
         );
+
+        return auctionId;
     }
 
-    function placeBid(uint256 auctionId, uint256 bidAmount) public nonReentrant {
+    function placeBid(uint256 auctionId) public payable nonReentrant returns (uint256){
         Auction storage auction = _auctions[auctionId];
         require(
             block.timestamp < auction.endTime,
             "NFTAuction: Auction has ended"
         );
-        require(bidAmount > 0, "NFTAuction: Bid must be greater than zero");
+        require(msg.value > 0, "NFTAuction: Bid must be greater than zero");
 
-        uint256 currentBid = _bids[auctionId][msg.sender] + bidAmount;
-        require(
-            currentBid >= auction.initialPrice,
-            "NFTAuction: Bid must be at least the initial price"
-        );
+        uint256 currentBid = _bids[auctionId][msg.sender] + msg.value;
         require(
             currentBid > auction.winnerBid,
             "NFTAuction: Bid must be higher than the current highest bid"
         );
-
-        auction.tokenPayment.safeTransferFrom(msg.sender, address(this), bidAmount);
 
         if (block.timestamp + EXTENSION_DURATION > auction.endTime) {
             auction.endTime += EXTENSION_DURATION;
@@ -160,9 +143,13 @@ contract NFTAuctionToken is IERC721Receiver, ReentrancyGuard {
         _bids[auctionId][msg.sender] = currentBid;
 
         if (currentBid > auction.highestBid) {
-            auction.winnerBid = auction.highestBid;
-            auction.highestBid = currentBid;
-            auction.winner = msg.sender;
+            if (auction.winner != msg.sender){
+                auction.winnerBid = auction.highestBid;
+                auction.highestBid = currentBid;
+                auction.winner = msg.sender;
+            } else {
+                auction.highestBid = currentBid;
+            }
         } else if (currentBid > auction.winnerBid) {
             auction.winnerBid = currentBid;
         }
@@ -170,6 +157,8 @@ contract NFTAuctionToken is IERC721Receiver, ReentrancyGuard {
         emit WinnerBid(auctionId, currentBid);
 
         emit BidPlaced(auctionId, msg.sender);
+
+        return currentBid;
     }
 
     function cancelBid(uint256 auctionId) public nonReentrant {
@@ -188,7 +177,7 @@ contract NFTAuctionToken is IERC721Receiver, ReentrancyGuard {
 
         _bids[auctionId][msg.sender] = 0;
 
-        auction.tokenPayment.safeTransfer(msg.sender, userBid);
+        payable(msg.sender).transfer(userBid);
 
         emit BidCancelled(auctionId, msg.sender);
     }
@@ -203,17 +192,18 @@ contract NFTAuctionToken is IERC721Receiver, ReentrancyGuard {
 
         auction.ended = true;
 
-        uint256 serviceFee = (auction.winnerBid * AUCTION_SERVICE_FEE_RATE) / 100;
+        uint256 serviceFee = (auction.winnerBid * AUCTION_SERVICE_FEE_RATE) /
+            100;
         uint256 finalAmount = auction.winnerBid - serviceFee;
         uint256 excessAmount = auction.highestBid - auction.winnerBid;
 
         // Refund the excess amount to the highest bidder (winner)
         if (excessAmount > 0) {
-            auction.tokenPayment.safeTransfer(auction.winner, excessAmount);
+            payable(auction.winner).transfer(excessAmount);
         }
 
-        auction.tokenPayment.safeTransfer(_organizer, serviceFee);
-        auction.tokenPayment.safeTransfer(auction.auctioneer, finalAmount);
+        payable(_organizer).transfer(serviceFee);
+        payable(auction.auctioneer).transfer(finalAmount);
 
         auction.nftContract.safeTransferFrom(
             address(this),
@@ -238,7 +228,7 @@ contract NFTAuctionToken is IERC721Receiver, ReentrancyGuard {
         auction.ended = true;
 
         if (auction.highestBid != 0) {
-            auction.tokenPayment.safeTransfer(auction.winner, auction.highestBid);
+            payable(auction.winner).transfer(auction.highestBid);
         }
 
         auction.nftContract.safeTransferFrom(
@@ -263,7 +253,7 @@ contract NFTAuctionToken is IERC721Receiver, ReentrancyGuard {
 
         _bids[auctionId][msg.sender] = 0;
 
-        auction.tokenPayment.safeTransfer(msg.sender, userBid);
+        payable(msg.sender).transfer(userBid);
     }
 
     function onERC721Received(
@@ -278,11 +268,10 @@ contract NFTAuctionToken is IERC721Receiver, ReentrancyGuard {
             );
     }
 
-    // get functions
+
     function getAuctionDetails(uint256 auctionId) external view returns (
         address auctioneer,
         IERC721 nftContract,
-        IERC20 tokenPayment,
         uint256 nftId,
         uint256 endTime,
         bool ended,
@@ -296,7 +285,6 @@ contract NFTAuctionToken is IERC721Receiver, ReentrancyGuard {
         return (
             auction.auctioneer,
             auction.nftContract,
-            auction.tokenPayment,
             auction.nftId,
             auction.endTime,
             auction.ended,
@@ -304,30 +292,36 @@ contract NFTAuctionToken is IERC721Receiver, ReentrancyGuard {
         );
     }
 
-    // @return bidPrice
-    // @param auctionId, bidder
-    function getBidPrice(uint256 auctionId, address bidder) external view returns (uint256)
-    {
+
+    function getBidPrice(uint256 auctionId) external view returns (uint256){
         require(
             auctionId > 0 && auctionId < _auctionIdCounter,
             "NFTAuction: Invalid auction ID"
         );
-        return _bids[auctionId][bidder];
+        return _bids[auctionId][msg.sender];
     }
 
     function getOngoingAuctions() external view returns (uint256[] memory) {
         uint256 totalAuctions = _auctionIdCounter;
         uint256 ongoingCount = 0;
 
+        // First pass to count ongoing auctions
         for (uint256 i = 1; i < totalAuctions; i++) {
             if (!_auctions[i].ended) {
                 ongoingCount++;
             }
         }
 
-        uint256[] memory ongoingAuctions = new uint256[](ongoingCount);
-        uint256 index = 1;
+        // If no ongoing auctions, return an empty array
+        if (ongoingCount == 0) {
+            return new uint256[](0);
+        }
 
+        // Initialize the array with the correct size
+        uint256[] memory ongoingAuctions = new uint256[](ongoingCount);
+        uint256 index = 0;
+
+        // Second pass to populate the array with ongoing auction IDs
         for (uint256 i = 1; i < totalAuctions; i++) {
             if (!_auctions[i].ended) {
                 ongoingAuctions[index] = i;

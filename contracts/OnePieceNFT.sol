@@ -9,9 +9,9 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract OnePieceNFT is ERC721, ERC721URIStorage, Ownable {
     uint256 private _nextTokenId;
 
-    constructor(address initialOwner)
+    constructor()
         ERC721("OnePieceNFT", "ONF")
-        Ownable(initialOwner)
+        Ownable(msg.sender)
     {}
 
     function safeMint(address to, string memory uri) public onlyOwner returns (uint256){
