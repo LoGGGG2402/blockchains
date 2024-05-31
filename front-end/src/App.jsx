@@ -5,6 +5,7 @@ import {BrowserRouter as Router, Route, Routes} from "react-router-dom";
 import Navbar from "./components/Navbar.jsx";
 import CreateNFTPage from "./pages/CreateNFTPage.jsx";
 import NFTsPage from "./pages/NFTsPage.jsx";
+import AuctionsPage from "./pages/AuctionsPage.jsx";
 
 
 
@@ -19,7 +20,7 @@ function App() {
             <Routes>
                 {/*<Route path="/" element={<NFTsPage/>}/>*/}
                 <Route path="/my-nft" element={<NFTsPage signer={signer}/>}/>
-                {/*<Route path="/auction" element={<AuctionsPage.jsx/>}/>*/}
+                <Route path="/auction" element={<AuctionsPage signer={signer}/>}/>
                 <Route path="/create-nft" element={<CreateNFTPage signer={signer}/>}/>
             </Routes>
         </Router>

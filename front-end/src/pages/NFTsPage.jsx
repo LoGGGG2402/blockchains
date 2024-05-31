@@ -105,7 +105,7 @@ function NFTsPage({ signer }) {
             "function ownerOf(uint256 tokenId) view returns (address)",
         ];
 
-        const NFTContract = new ethers.Contract(nftAddress, ERC721abi, provider);
+        const NFTContract = new ethers.Contract(nftAddress, ERC721abi, signer);
         console.log("Contract:", NFTContract);
 
         const owner = await NFTContract.ownerOf(nftTokenId);
@@ -155,45 +155,47 @@ function NFTsPage({ signer }) {
             }
         });
 
+        console.log("Form values:", formValues)
+
         if (formValues) {
             try {
                 if (formValues.paymentToken === "" || formValues.paymentToken === null || formValues.paymentToken === undefined) {
-                    // check payment token is valid ERC20 token
-                    let isERC20 = await checkIfERC20(formValues.paymentToken);
-                    if (!isERC20) {
-                        alert("Invalid ERC20 token address!");
-                        return;
-                    }
-                    await NFTContract.approve(NFTAuctionToken.address, nftTokenId);
-                    const NFTAuctionContract = new ethers.Contract(NFTAuctionToken.address, NFTAuctionToken.abi, signer);
+                    await NFTContract.approve(NFTAuction.address, nftTokenId);
+                    console.log("approved")
+                    const NFTAuctionContract = new ethers.Contract(NFTAuction.address, NFTAuction.abi, signer);
+                    console.log("NFTAuctionContract", NFTAuctionContract)
                     await NFTAuctionContract.createAuction(
                         nftAddress,
                         nftTokenId,
-                        formValues.paymentToken,
                         formValues.initialPrice,
                         formValues.duration,
                     );
                     Swal.fire("Auction created successfully!", "", "success");
                     return;
                 }
-                await NFTContract.approve(NFTAuction.address, nftTokenId);
-                const NFTAuctionContract = new ethers.Contract(NFTAuction.address, NFTAuction.abi, signer);
+                // check payment token is valid ERC20 token
+                let isERC20 = await checkIfERC20(formValues.paymentToken);
+                if (!isERC20) {
+                    alert("Invalid ERC20 token address!");
+                    return;
+                }
+                await NFTContract.approve(NFTAuctionToken.address, nftTokenId);
+                const NFTAuctionContract = new ethers.Contract(NFTAuctionToken.address, NFTAuctionToken.abi, signer);
                 await NFTAuctionContract.createAuction(
                     nftAddress,
                     nftTokenId,
+                    formValues.paymentToken,
                     formValues.initialPrice,
                     formValues.duration,
                 );
+                Swal.fire("Auction created successfully!", "", "success");
             } catch (error) {
                 console.error("Error creating auction:", error);
                 Swal.fire("Error creating auction!", error.message, "error");
             }
 
         }
-
-
     }
-
 
     const checkIfERC20 = async (address) => {
         try {
@@ -245,13 +247,14 @@ function NFTsPage({ signer }) {
             </form>
             <div className="flex flex-wrap justify-center">
                 {nfts.map((nft, index) => (
-                    <NFT
-                        key={index}
-                        image={nft.image}
-                        title={nft.name}
-                        description={nft.description}
-                        owner={nft.owner}
-                    />
+                    <div key={index} onClick={() => handleCreateAuction(nft.address, nft.tokenId)}>
+                        <NFT
+                            image={nft.image}
+                            title={nft.name}
+                            description={nft.description}
+                            owner={nft.owner}
+                        />
+                    </div>
                 ))}
             </div>
         </div>

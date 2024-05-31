@@ -301,16 +301,20 @@ contract NFTAuction is IERC721Receiver, ReentrancyGuard {
         uint256 totalAuctions = _auctionIdCounter;
         uint256 ongoingCount = 0;
 
-        for (uint256 i = 1; i <= totalAuctions; i++) {
+        for (uint256 i = 1; i < totalAuctions; i++) {
             if (!_auctions[i].ended) {
                 ongoingCount++;
             }
         }
 
-        uint256[] memory ongoingAuctions = new uint256[](ongoingCount);
-        uint256 index = 0;
+        if (ongoingCount == 0) {
+            return new uint256[](0);
+        }
 
-        for (uint256 i = 1; i <= totalAuctions; i++) {
+        uint256[] memory ongoingAuctions = new uint256[](ongoingCount);
+        uint256 index = 1;
+
+        for (uint256 i = 1; i < totalAuctions; i++) {
             if (!_auctions[i].ended) {
                 ongoingAuctions[index] = i;
                 index++;
