@@ -56,7 +56,7 @@ function AuctionsPage({ signer }) {
             }
         };
 
-        fetchAuctions();
+        fetchAuctions().then()
     }, [signer]);
 
     return (

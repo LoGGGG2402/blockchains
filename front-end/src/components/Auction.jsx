@@ -29,7 +29,7 @@ function Auction({ auctionContract, auctionId, signer }) {
                 const { auctioneer, nftContract, nftId, endTime, ended, winnerBid, paymentToken } = auctionInfo;
                 setAuctioneer(auctioneer);
                 setEndTime(endTime);
-                setEnded(Date.now() > endTime || ended);
+                setEnded(ended);
 
                 const ERC721abi = [
                     "function tokenURI(uint256 tokenId) view returns (string)",
@@ -74,7 +74,7 @@ function Auction({ auctionContract, auctionId, signer }) {
                     const decimals = await tokenContract.decimals();
 
                     setSymbol(symbol);
-                    setWinnerBid(Number(ethers.utils.formatUnits(winnerBid, decimals)));
+                    setWinnerBid(ethers.utils.formatUnits(winnerBid, decimals));
                 }
             } catch (error) {
                 console.error("Error fetching auction details:", error);

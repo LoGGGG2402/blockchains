@@ -45,7 +45,7 @@ function NFTsPage({ signer }) {
     const handleAddNFT = async (address, tokenId) => {
         console.log("Adding NFT:", address, tokenId);
         if (!window.ethereum) {
-            alert("Please install MetaMask!");
+            await Sweet.fire("Please install MetaMask!", "", "error");
             return;
         }
         let provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -61,7 +61,7 @@ function NFTsPage({ signer }) {
 
         const owner = await contract.ownerOf(tokenId);
         if (owner !== signer._address) {
-            alert("You don't own this NFT!");
+            await Sweet.fire("You don't own this NFT!", "", "error");
             return;
         }
 
@@ -99,7 +99,7 @@ function NFTsPage({ signer }) {
     const handleCreateAuction = async (nftAddress, nftTokenId) => {
         console.log("Creating auction for NFT:", nftAddress, nftTokenId);
         if (!window.ethereum) {
-            alert("Please install MetaMask!");
+            await Sweet.fire("Please install MetaMask!", "", "error");
             return;
         }
         let ERC721abi = [
@@ -115,7 +115,7 @@ function NFTsPage({ signer }) {
 
         const owner = await NFTContract.ownerOf(nftTokenId);
         if (owner !== signer._address) {
-            alert("You don't own this NFT!");
+            await Sweet.fire("You don't own this NFT!", "", "error");
             return;
         }
         // create form for auction details: paymentToken, duration, initialPrice
@@ -190,7 +190,7 @@ function NFTsPage({ signer }) {
                 // check payment token is valid ERC20 token
                 let isERC20 = await checkIfERC20(formValues.paymentToken);
                 if (!isERC20) {
-                    alert("Invalid ERC20 token address!");
+                    await Sweet.fire("Invalid ERC20 token address!", "", "error");
                     return;
                 }
                 let isApproved = await NFTContract.getApproved(nftTokenId);
@@ -219,7 +219,7 @@ function NFTsPage({ signer }) {
 
     const checkIfERC20 = async (address) => {
         if (!window.ethereum) {
-            alert("Please install MetaMask!");
+            await Sweet.fire("Please install MetaMask!", "", "error");
             return;
         }
         let provider = new ethers.providers.Web3Provider(window.ethereum);
