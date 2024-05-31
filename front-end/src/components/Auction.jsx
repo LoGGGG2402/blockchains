@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ethers } from "ethers";
 import axios from "axios";
+import Sweet from "sweetalert2";
 
 function Auction({ auctionContract, auctionId, signer }) {
     const [nft, setNft] = useState({});
@@ -19,7 +20,10 @@ function Auction({ auctionContract, auctionId, signer }) {
         const fetchAuctionDetails = async () => {
             setLoading(true);
             if (!window.ethereum) {
-                alert("Please install MetaMask!");
+                await Sweet.fire({
+                    icon: "error",
+                    title: "Please install MetaMask!",
+                });
                 return;
             }
 
@@ -48,9 +52,11 @@ function Auction({ auctionContract, auctionId, signer }) {
                     image: response.data.image,
                 };
 
-
-                const myBid = await auctionContract.getBidPrice(auctionId);
-                setMyBid(ethers.utils.formatEther(myBid));
+                if (signer){
+                    const myBid = await auctionContract.connect(signer).getBidPrice(auctionId);
+                    console.log("My Bid:", myBid)
+                    setMyBid(ethers.utils.formatEther(myBid));
+                }
 
                 setNft(nft);
                 if (!paymentToken) {
@@ -90,7 +96,10 @@ function Auction({ auctionContract, auctionId, signer }) {
 
     const placeBid = async () => {
         if (!window.ethereum) {
-            alert("Please install MetaMask!");
+            await Sweet.fire({
+                icon: "error",
+                title: "Please install MetaMask!",
+            });
             return;
         }
         const contractWithSigner = auctionContract.connect(signer);
@@ -120,11 +129,18 @@ function Auction({ auctionContract, auctionId, signer }) {
             }
             if (tx) {
                 await tx.wait();
-                alert("Bid placed successfully!");
+                await Sweet.fire({
+                    icon: "success",
+                    title: "Bid placed successfully!",
+                });
+
             }
         } catch (error) {
             console.error("Error placing bid:", error);
-            alert("Failed to place bid.");
+            await Sweet.fire({
+                icon: "error",
+                title: "Failed to place bid.",
+            });
         } finally {
             setLoading(false);
         }
@@ -133,12 +149,50 @@ function Auction({ auctionContract, auctionId, signer }) {
     const cancelAuction = async () => {
     }
     const cancelBid = async () => {
+        try {
+            await auctionContract.connect(signer).cancelBid(auctionId);
+            await Sweet.fire({
+                icon: "success",
+                title: "Bid cancelled successfully!",
+            });
+        } catch (error) {
+            console.error("Error cancelling bid:", error);
+            await Sweet.fire({
+                icon: "error",
+                title: "Failed to cancel bid.",
+            });
+        }
     }
     const withdraw = async () => {
+        try {
+            await auctionContract.connect(signer).withdraw(auctionId);
+            await Sweet.fire({
+                icon: "success",
+                title: "Withdrawn successfully!",
+            });
+        } catch (error) {
+            console.error("Error withdrawing:", error);
+            await Sweet.fire({
+                icon: "error",
+                title: "Failed to withdraw.",
+            });
+        }
     }
     const endAuction = async () => {
+        try {
+            await auctionContract.connect(signer).endAuction(auctionId);
+            await Sweet.fire({
+                icon: "success",
+                title: "Auction ended successfully!",
+            });
+        } catch (error) {
+            console.error("Error ending auction:", error);
+            await Sweet.fire({
+                icon: "error",
+                title: "Failed to end auction.",
+            });
+        }
     }
-
 
     return (
         <>
