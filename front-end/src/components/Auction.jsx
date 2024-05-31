@@ -143,7 +143,7 @@ function Auction({ auctionContract, auctionId, signer }) {
     return (
         <>
             {loading ? (
-                <div className="flex justify-center items-center h-screen">
+                <div className="flex  items-center h-screen">
                     <div className="loader"></div>
                 </div>
             ) : (
@@ -195,7 +195,7 @@ function Auction({ auctionContract, auctionId, signer }) {
                                 Withdraw
                             </button>
                         )}
-                        {signer._address === auctioneer && !ended && (
+                        {signer._address === auctioneer && (
                             <div>
                                 <button
                                     className="mt-2 w-full bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded transition duration-300"
@@ -203,12 +203,14 @@ function Auction({ auctionContract, auctionId, signer }) {
                                 >
                                     End Auction
                                 </button>
+                                {!ended && (
                                 <button
                                     className="mt-2 w-full bg-blue-500 hover:bg-gray-700 text-white font-bold py-1 px-2 rounded transition duration-300"
                                     onClick={cancelAuction}
                                 >
                                     Cancel Auction
                                 </button>
+                                )}
                             </div>
                         )}
                     </div>
