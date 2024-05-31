@@ -9,7 +9,7 @@ function Auction({ auctionContract, auctionId, signer }) {
     const [endTime, setEndTime] = useState(0);
     const [ended, setEnded] = useState(false);
     const [winnerBid, setWinnerBid] = useState("");
-    const [myBid, setMyBid] = useState("");
+    const [myBid, setMyBid] = useState(null);
     const [symbol, setSymbol] = useState("");
 
     const [paymentContract, setPaymentContract] = useState(null);
@@ -54,13 +54,14 @@ function Auction({ auctionContract, auctionId, signer }) {
 
                 if (signer){
                     const myBid = await auctionContract.connect(signer).getBidPrice(auctionId);
-                    console.log("My Bid:", myBid)
-                    setMyBid(ethers.utils.formatEther(myBid));
+                    if (myBid.gt(0))
+                    {
+                        setMyBid(ethers.utils.formatEther(myBid));
+                    }
                 }
 
                 setNft(nft);
                 if (!paymentToken) {
-                    console.log("Winner Bid:", winnerBid);
                     setWinnerBid(ethers.utils.formatEther(winnerBid));
                     setSymbol("ETH");
                 } else {
@@ -89,9 +90,7 @@ function Auction({ auctionContract, auctionId, signer }) {
             }
         };
 
-        fetchAuctionDetails().then(() => {
-            console.log("Auction details fetched successfully!");
-        })
+        fetchAuctionDetails().then()
     }, [auctionContract, auctionId, signer]);
 
     const placeBid = async () => {
@@ -165,7 +164,7 @@ function Auction({ auctionContract, auctionId, signer }) {
     }
     const withdraw = async () => {
         try {
-            await auctionContract.connect(signer).withdraw(auctionId);
+            await auctionContract.connect(signer).withdrawBid(auctionId);
             await Sweet.fire({
                 icon: "success",
                 title: "Withdrawn successfully!",
@@ -221,9 +220,10 @@ function Auction({ auctionContract, auctionId, signer }) {
                             <span className="block  rounded-full px-2 py-1 text-xs font-semibold text-green-700 mr-1 mb-1">
                                 Winner Bid: {winnerBid} {symbol}
                             </span>
-                            <span className="block  rounded-full px-2 py-1 text-xs font-semibold text-green-700 mr-1 mb-1">
+                            {myBid && <span
+                                className="block  rounded-full px-2 py-1 text-xs font-semibold text-green-700 mr-1 mb-1">
                                 My Bid: {myBid} {symbol}
-                            </span>
+                            </span>}
                         </div>
                         {signer._address !== auctioneer && !ended && (
                             <div>
@@ -241,7 +241,7 @@ function Auction({ auctionContract, auctionId, signer }) {
                                 </button>
                             </div>
                         )}
-                        {signer._address !== auctioneer && ended && (
+                        {signer._address !== auctioneer && ended && myBid && (
                             <button
                                 className="mt-2 w-full bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded transition duration-300"
                                 onClick={withdraw}

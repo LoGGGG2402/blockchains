@@ -16,6 +16,7 @@ function OnGoingAuctionsPage({ signer }) {
                     icon: "error",
                     title: "Please install MetaMask!"
                 });
+
                 return;
             }
             const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -40,28 +41,21 @@ function OnGoingAuctionsPage({ signer }) {
             }
 
             try {
-                const auctions_count = await NFTAuctionContract._auctionIdCounter();
-                const auctionsTokens_count = await NFTAuctionTokenContract._auctionIdCounter();
+                const onGoingAuctions = await NFTAuctionContract.getOngoingAuctions();
+                const onGoingAuctionsTokens = await NFTAuctionTokenContract.getOngoingAuctions();
 
-                const auctions = [];
-                const auctionsTokens = [];
+                const auctionsList = onGoingAuctions.map(auctionId => ({
+                    auctionContract: NFTAuctionContract,
+                    auctionId
+                }));
 
-                for (let i = 1; i < auctions_count; i++) {
-                    auctions.push({
-                        auctionContract: NFTAuctionContract,
-                        auctionId: i
-                    });
-                }
+                const auctionsTokensList = onGoingAuctionsTokens.map(auctionId => ({
+                    auctionContract: NFTAuctionTokenContract,
+                    auctionId
+                }));
 
-                for (let i = 1; i < auctionsTokens_count; i++) {
-                    auctionsTokens.push({
-                            auctionContract: NFTAuctionTokenContract,
-                            auctionId: i
-                    });
-                }
-
-                setAuctions(auctions);
-                setAuctionsTokens(auctionsTokens);
+                setAuctions(auctionsList);
+                setAuctionsTokens(auctionsTokensList);
             } catch (error) {
                 console.error("Error fetching auctions:", error);
             }

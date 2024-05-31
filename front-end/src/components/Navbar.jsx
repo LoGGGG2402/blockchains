@@ -2,18 +2,23 @@ import {Link} from "react-router-dom";
 import {useEffect} from 'react';
 
 import {ethers} from "ethers";
+import Sweet from "sweetalert2";
 
-function Navbar({ signer, setSigner, network, setNetwork }){
+function Navbar({ signer, setSigner }){
     const connectWallet = async () => {
         try {
             if (!window.ethereum) {
-                alert("Please install MetaMask!");
+                await Sweet.fire({
+                    icon: "error",
+                    title: "Please install MetaMask!"
+                });
+
                 return;
             }
             const newProvider = new ethers.providers.Web3Provider(window.ethereum);
 
-            const network = await newProvider.getNetwork();
-            setNetwork(network);
+            // const network = await newProvider.getNetwork();
+            // setNetwork(network);
 
             const accounts = await newProvider.send('eth_requestAccounts', []);
             const signer = await newProvider.getSigner(accounts[0]);
@@ -23,33 +28,29 @@ function Navbar({ signer, setSigner, network, setNetwork }){
             // Add listener for account changes
             window.ethereum.on('accountsChanged', async (newAccounts) => {
                 if (newAccounts.length === 0) {
-                    console.log('Account disconnected');
                     setSigner(null);
                 } else {
-                    console.log('Account changed:', newAccounts[0]);
                     const updatedSigner = await newProvider.getSigner(newAccounts[0]);
                     setSigner(updatedSigner);
                 }
             });
 
             // Add listener for chain changes
-            window.ethereum.on('chainChanged', async () => {
-                // Reset the provider to avoid network mismatch issues
-                const updatedProvider = new ethers.providers.Web3Provider(window.ethereum);
-
-                const updatedNetwork = await updatedProvider.getNetwork();
-                console.log('Network changed:', updatedNetwork);
-                setNetwork(updatedNetwork);
-
-                const updatedAccounts = await updatedProvider.listAccounts();
-                if (updatedAccounts.length === 0) {
-                    console.log('Account disconnected');
-                    setSigner(null);
-                } else {
-                const updatedSigner = await updatedProvider.getSigner(updatedAccounts[0]);
-                setSigner(updatedSigner);
-                }
-            });
+            // window.ethereum.on('chainChanged', async () => {
+            //     // Reset the provider to avoid network mismatch issues
+            //     const updatedProvider = new ethers.providers.Web3Provider(window.ethereum);
+            //
+            //     // const updatedNetwork = await updatedProvider.getNetwork();
+            //     // setNetwork(updatedNetwork);
+            //
+            //     const updatedAccounts = await updatedProvider.listAccounts();
+            //     if (updatedAccounts.length === 0) {
+            //         setSigner(null);
+            //     } else {
+            //     const updatedSigner = await updatedProvider.getSigner(updatedAccounts[0]);
+            //     setSigner(updatedSigner);
+            //     }
+            // });
         } catch (error) {
             console.error("Error connecting to wallet: ", error);
         }
@@ -57,7 +58,7 @@ function Navbar({ signer, setSigner, network, setNetwork }){
 
     // Automatically connect the wallet when the component mounts
     useEffect(() => {
-        connectWallet().then(() => console.log("Wallet connected"));
+        connectWallet().then();
     }, []);
 
 
@@ -66,6 +67,7 @@ function Navbar({ signer, setSigner, network, setNetwork }){
             <ul className="flex space-x-8">
                 <Link className="text-gray-700 hover:text-blue-500 transition" to={"/my-nft"}>My NFT</Link>
                 <Link className="text-gray-700 hover:text-blue-500 transition" to={"/auction"}>Auction</Link>
+                <Link className="text-gray-700 hover:text-blue-500 transition" to={"/ongoing-auction"}>On Going Auction</Link>
                 <Link className="text-gray-700 hover:text-blue-500 transition" to={"/create-nft"}>Create NFT</Link>
             </ul>
 
