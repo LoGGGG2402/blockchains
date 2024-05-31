@@ -89,12 +89,7 @@ function Auction({ auctionContract, auctionId, signer }) {
     }, [auctionContract, auctionId, signer]);
 
     const placeBid = async () => {
-        if (!window.ethereum) {
-            alert("Please install MetaMask!");
-            return;
-        }
         const contractWithSigner = auctionContract.connect(signer);
-
         try {
             setLoading(true);
             let tx;

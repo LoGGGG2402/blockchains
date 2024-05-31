@@ -207,6 +207,15 @@ contract NFTAuctionToken is IERC721Receiver, ReentrancyGuard {
 
         auction.ended = true;
 
+        if (auction.winner == address(0)) {
+            auction.nftContract.safeTransferFrom(
+                address(this),
+                auction.auctioneer,
+                auction.nftId
+            );
+            return;
+        }
+
         uint256 serviceFee = (auction.winnerBid * AUCTION_SERVICE_FEE_RATE) / 100;
         uint256 finalAmount = auction.winnerBid - serviceFee;
         uint256 excessAmount = auction.highestBid - auction.winnerBid;
