@@ -1,7 +1,11 @@
 import NFT from "../components/NFT.jsx";
-import { useEffect, useState } from "react";
+import {useEffect, useState} from "react";
 import axios from "axios";
-import { ethers } from "ethers";
+import {ethers} from "ethers";
+import Swal from "sweetalert2";
+
+import NFTAuction from "../assets/contracts/NFTAuction.json";
+import NFTAuctionToken from "../assets/contracts/NFTAuctionToken.json";
 
 function NFTsPage({ signer }) {
     const [nfts, setNfts] = useState([]);
@@ -85,6 +89,129 @@ function NFTsPage({ signer }) {
         handleAddNFT(address, tokenId).then(() => console.log("NFT added successfully!"));
         setAddress("");
         setTokenId("");
+    };
+
+    const handleCreateAuction = async (nftAddress, nftTokenId) => {
+        console.log("Creating auction for NFT:", nftAddress, nftTokenId);
+        if (!window.ethereum) {
+            alert("Please install MetaMask!");
+            return;
+        }
+        let provider = new ethers.providers.Web3Provider(window.ethereum);
+        let ERC721abi = [
+            "function tokenURI(uint256 tokenId) view returns (string)",
+            "function approve(address to, uint256 tokenId)",
+            "function balanceOf(address owner) view returns (uint256)",
+            "function ownerOf(uint256 tokenId) view returns (address)",
+        ];
+
+        const NFTContract = new ethers.Contract(nftAddress, ERC721abi, provider);
+        console.log("Contract:", NFTContract);
+
+        const owner = await NFTContract.ownerOf(nftTokenId);
+        if (owner !== signer._address) {
+            alert("You don't own this NFT!");
+            return;
+        }
+        // create form for auction details: paymentToken, duration, initialPrice
+        const {value: formValues} = await Swal.fire({
+            title: "Create Auction",
+            html:
+                '<input id="paymentToken" class="swal2-input" placeholder="Payment Token Address">' +
+                '<input id="durationValue" class="swal2-input" placeholder="Duration">' +
+                '<select id="durationUnit" class="swal2-input">' +
+                '<option value="seconds">Seconds</option>' +
+                '<option value="minutes">Minutes</option>' +
+                '<option value="hours">Hours</option>' +
+                '<option value="days">Days</option>' +
+                '</select>' +
+                '<input id="initialPrice" class="swal2-input" placeholder="Initial Price">',
+            focusConfirm: false,
+            preConfirm: () => {
+                const durationValue = document.getElementById("durationValue").value;
+                const durationUnit = document.getElementById("durationUnit").value;
+                let durationInSeconds;
+
+                switch (durationUnit) {
+                    case "seconds":
+                        durationInSeconds = durationValue;
+                        break;
+                    case "minutes":
+                        durationInSeconds = durationValue * 60;
+                        break;
+                    case "hours":
+                        durationInSeconds = durationValue * 60 * 60;
+                        break;
+                    case "days":
+                        durationInSeconds = durationValue * 60 * 60 * 24;
+                        break;
+                }
+
+                return {
+                    paymentToken: document.getElementById("paymentToken").value,
+                    duration: durationInSeconds,
+                    initialPrice: ethers.utils.parseEther(document.getElementById("initialPrice").value)
+                };
+            }
+        });
+
+        if (formValues) {
+            try {
+                if (formValues.paymentToken === "" || formValues.paymentToken === null || formValues.paymentToken === undefined) {
+                    // check payment token is valid ERC20 token
+                    let isERC20 = await checkIfERC20(formValues.paymentToken);
+                    if (!isERC20) {
+                        alert("Invalid ERC20 token address!");
+                        return;
+                    }
+                    await NFTContract.approve(NFTAuctionToken.address, nftTokenId);
+                    const NFTAuctionContract = new ethers.Contract(NFTAuctionToken.address, NFTAuctionToken.abi, signer);
+                    await NFTAuctionContract.createAuction(
+                        nftAddress,
+                        nftTokenId,
+                        formValues.paymentToken,
+                        formValues.initialPrice,
+                        formValues.duration,
+                    );
+                    Swal.fire("Auction created successfully!", "", "success");
+                    return;
+                }
+                await NFTContract.approve(NFTAuction.address, nftTokenId);
+                const NFTAuctionContract = new ethers.Contract(NFTAuction.address, NFTAuction.abi, signer);
+                await NFTAuctionContract.createAuction(
+                    nftAddress,
+                    nftTokenId,
+                    formValues.initialPrice,
+                    formValues.duration,
+                );
+            } catch (error) {
+                console.error("Error creating auction:", error);
+                Swal.fire("Error creating auction!", error.message, "error");
+            }
+
+        }
+
+
+    }
+
+
+    const checkIfERC20 = async (address) => {
+        try {
+            const contract = new ethers.Contract(address, [
+                "function name() view returns (string)",
+                "function symbol() view returns (string)",
+                "function decimals() view returns (uint8)"
+            ], provider);
+
+            const name = await contract.name();
+            const symbol = await contract.symbol();
+            const decimals = await contract.decimals();
+
+            return {name, symbol, decimals};
+        } catch (error) {
+            console.error("Error fetching ERC20 token:", error);
+            return false;
+        }
     };
 
     return (

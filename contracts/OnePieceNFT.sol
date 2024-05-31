@@ -6,8 +6,6 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-import "hardhat/console.sol";
-
 contract OnePieceNFT is ERC721, ERC721URIStorage, Ownable {
     uint256 private _nextTokenId;
 
@@ -27,7 +25,6 @@ contract OnePieceNFT is ERC721, ERC721URIStorage, Ownable {
         uint256 tokenId = _nextTokenId++;
         _safeMint(msg.sender, tokenId);
         _setTokenURI(tokenId, uri);
-        console.log("Minted token %s to %s with uri %s", tokenId, msg.sender, uri);
         return tokenId;
     }
 

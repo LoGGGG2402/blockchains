@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react'
+import {useState} from 'react'
 import './App.css'
 import {BrowserRouter as Router, Route, Routes} from "react-router-dom";
 
@@ -11,13 +11,6 @@ import NFTsPage from "./pages/NFTsPage.jsx";
 function App() {
     const [signer, setSigner] = useState(null);
     const [network, setNetwork] = useState(null);
-
-    const [nftForm, setNftForm] = useState({
-        name: "",
-        description: "",
-        image: null
-    });
-
 
     return (
         <Router>

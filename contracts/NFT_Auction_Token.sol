@@ -304,6 +304,17 @@ contract NFTAuctionToken is IERC721Receiver, ReentrancyGuard {
         );
     }
 
+    // @return bidPrice
+    // @param auctionId, bidder
+    function getBidPrice(uint256 auctionId, address bidder) external view returns (uint256)
+    {
+        require(
+            auctionId > 0 && auctionId < _auctionIdCounter,
+            "NFTAuction: Invalid auction ID"
+        );
+        return _bids[auctionId][bidder];
+    }
+
     function getOngoingAuctions() external view returns (uint256[] memory) {
         uint256 totalAuctions = _auctionIdCounter;
         uint256 ongoingCount = 0;

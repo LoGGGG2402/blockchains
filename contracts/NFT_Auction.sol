@@ -264,9 +264,7 @@ contract NFTAuction is IERC721Receiver, ReentrancyGuard {
             );
     }
 
-    // get functions
-    // @return auctioneer, nftContract, nftId,endTime, ended, winnerBid
-    // @param auctionId
+
     function getAuctionDetails(uint256 auctionId) external view returns (
         address auctioneer,
         IERC721 nftContract,
@@ -288,6 +286,15 @@ contract NFTAuction is IERC721Receiver, ReentrancyGuard {
             auction.ended,
             auction.winnerBid
         );
+    }
+
+
+    function getBidPrice(uint256 auctionId, address bidder) external view returns (uint256){
+        require(
+            auctionId > 0 && auctionId < _auctionIdCounter,
+            "NFTAuction: Invalid auction ID"
+        );
+        return _bids[auctionId][bidder];
     }
 
     function getOngoingAuctions() external view returns (uint256[] memory) {
