@@ -11,6 +11,8 @@ function NFTsPage({ signer }) {
     const [nfts, setNfts] = useState([]);
     const [address, setAddress] = useState("");
     const [tokenId, setTokenId] = useState("");
+    const [showModal, setShowModal] = useState(false);
+
 
     useEffect(() => {
         async function fetchData() {
@@ -215,42 +217,76 @@ function NFTsPage({ signer }) {
             return false;
         }
     };
+    const toggleModal = () => {
+        setShowModal(!showModal);
+    };
+    const handleOutsideClick = (e) => {
+        if (e.target.id === 'modal-background') {
+            setShowModal(false);
+        }
+    };
 
     return (
         <div className="container mx-auto">
-            <h1 className="text-3xl font-bold text-center my-8">My NFT Collection</h1>
-            <form onSubmit={handleSubmit} className="mb-8">
-                <div className="flex flex-col items-center">
-                    <input
-                        type="text"
-                        placeholder="NFT Contract Address"
-                        value={address}
-                        onChange={(e) => setAddress(e.target.value)}
-                        className="mb-4 p-2 border border-gray-300 rounded"
-                        required
-                    />
-                    <input
-                        type="text"
-                        placeholder="NFT Token ID"
-                        value={tokenId}
-                        onChange={(e) => setTokenId(e.target.value)}
-                        className="mb-4 p-2 border border-gray-300 rounded"
-                        required
-                    />
-                    <button
-                        type="submit"
-                        className="bg-blue-500 text-white p-2 rounded"
-                    >
-                        Add NFT
-                    </button>
+            
+            <div>
+            <button
+                onClick={toggleModal}
+                className="bg-blue-500 text-white p-2 rounded mb-4 hover:bg-blue-600 mt-4"
+            >
+                Import NFT
+            </button>
+            {showModal && (
+                <div
+                    id="modal-background"
+                    className="fixed inset-0 flex items-center justify-center z-50"
+                    onClick={handleOutsideClick}
+                >
+                    <div className="absolute inset-0 bg-black opacity-50"></div>
+                    <div className="bg-white p-6 rounded-lg shadow-lg z-10 w-96 relative">
+                        <h2 className="text-2xl mb-4">Import NFT</h2>
+                        <form onSubmit={handleSubmit} className="mb-8">
+                            <div className="flex flex-col items-center">
+                                <input
+                                    type="text"
+                                    placeholder="NFT Contract Address"
+                                    value={address}
+                                    onChange={(e) => setAddress(e.target.value)}
+                                    className="mb-4 p-2 border border-gray-300 rounded w-full"
+                                    required
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="NFT Token ID"
+                                    value={tokenId}
+                                    onChange={(e) => setTokenId(e.target.value)}
+                                    className="mb-4 p-2 border border-gray-300 rounded w-full"
+                                    required
+                                />
+                                <button
+                                    type="submit"
+                                    className="bg-blue-500 text-white p-2 rounded w-full"
+                                >
+                                    Import NFT
+                                </button>
+                            </div>
+                        </form>
+                        <button
+                            onClick={toggleModal}
+                            className="absolute top-2 right-2 bg-gray-300 p-2 rounded-full"
+                        >
+                            &times;
+                        </button>
+                    </div>
                 </div>
-            </form>
-            <div className="flex flex-wrap justify-center">
+            )}
+        </div>
+            <div className="flex flex-wrap ">
                 {nfts.map((nft, index) => (
                     <div key={index} onClick={() => handleCreateAuction(nft.address, nft.tokenId)}>
                         <NFT
                             image={nft.image}
-                            title={nft.name}
+                            name={nft.name}
                             description={nft.description}
                             owner={nft.owner}
                         />

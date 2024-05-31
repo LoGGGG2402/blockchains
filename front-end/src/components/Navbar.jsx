@@ -83,7 +83,7 @@ function Navbar({ signer, setSigner, network, setNetwork }){
                     <div className="relative inline-block">
                         <button
                             type="button"
-                            className="px-6 py-2 bg-green-500 text-white rounded-md font-semibold text-lg transition hover:bg-green-600"
+                            className="px-6 py-2 bg-blue-500 text-white rounded-md font-semibold text-lg transition hover:bg-blue-600"
                         >
                             {signer._address.slice(0, 6) + '...' + signer._address.slice(-4)}
                         </button>

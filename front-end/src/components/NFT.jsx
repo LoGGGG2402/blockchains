@@ -1,18 +1,25 @@
-function NFT({ image, name, description, owner }){
+import React from 'react';
+
+function NFT({ image, name, description, owner }) {
     return (
-    <div className="max-w-sm rounded overflow-hidden shadow-lg m-4 bg-white">
-      <img className="w-full h-48 object-cover" src={image} alt={name} />
-      <div className="px-6 py-4">
-        <div className="font-bold text-xl mb-2">{name}</div>
-        <p className="text-gray-700 text-base">{description}</p>
-      </div>
-      <div className="px-6 pt-4 pb-2">
-        <span className="block bg-green-200 rounded-full px-3 py-1 text-sm font-semibold text-green-700 mr-2 mb-2">
-          Owner: {owner}
-        </span>
-      </div>
-    </div>
-  );
+        <div className="flex w-64 flex-shrink-0 flex-col overflow-hidden rounded-xl border border-gray-200 font-semibold shadow-lg m-4 bg-white">
+            <div className="h-64 w-full flex items-center justify-center overflow-hidden bg-gray-100">
+                <img
+                    src={image}
+                    alt={name}
+                    className="h-full w-full object-cover"
+                    style={{ maxWidth: '100%', maxHeight: '100%' }}
+                />
+            </div>
+            <div className="flex flex-col p-4">
+                <p className="text-lg text-center font-bold mb-1 truncate text-gray-900">{name}</p>
+                <span className="text-sm font-normal mb-1 truncate text-gray-600">Description: {description}</span>
+                <span className="text-sm font-normal text-gray-600 truncate max-w-full inline-block">
+                    Owner: {owner}
+                </span>
+            </div>
+        </div>
+    );
 }
 
 export default NFT;
