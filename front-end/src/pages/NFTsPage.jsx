@@ -2,7 +2,7 @@ import NFT from "../components/NFT.jsx";
 import {useEffect, useState} from "react";
 import axios from "axios";
 import {ethers} from "ethers";
-import Swal from "sweetalert2";
+import Sweet from "sweetalert2";
 
 import NFTAuction from "../assets/contracts/NFTAuction.json";
 import NFTAuctionToken from "../assets/contracts/NFTAuctionToken.json";
@@ -119,7 +119,7 @@ function NFTsPage({ signer }) {
             return;
         }
         // create form for auction details: paymentToken, duration, initialPrice
-        const {value: formValues} = await Swal.fire({
+        const {value: formValues} = await Sweet.fire({
             title: "Create Auction",
             html:
                 '<input id="paymentToken" class="swal2-input" placeholder="Payment Token Address">' +
@@ -167,7 +167,7 @@ function NFTsPage({ signer }) {
                 if (formValues.paymentToken === "" || formValues.paymentToken === null || formValues.paymentToken === undefined) {
                     let isApproved = await NFTContract.getApproved(nftTokenId);
                     if (isApproved !== NFTAuction.address) {
-                        Swal.fire("Please approve NFTAuction contract to manage your NFT!", "", "error");
+                        await Sweet.fire("Please approve NFTAuction contract to manage your NFT!", "", "error");
                         await NFTContract.approve(NFTAuction.address, nftTokenId);
                         return;
                     }
@@ -180,7 +180,11 @@ function NFTsPage({ signer }) {
                         formValues.initialPrice,
                         formValues.duration,
                     );
-                    Swal.fire("Auction created successfully!", "", "success");
+                    await Sweet.fire("Auction created successfully!", "", "success");
+                    let nftsStorage = JSON.parse(localStorage.getItem("nfts")) || [];
+                    nftsStorage = nftsStorage.filter(nft => nft.tokenId !== nftTokenId);
+                    localStorage.setItem("nfts", JSON.stringify(nftsStorage));
+                    setNfts(nfts.filter(nft => nft.tokenId !== nftTokenId));
                     return;
                 }
                 // check payment token is valid ERC20 token
@@ -189,7 +193,13 @@ function NFTsPage({ signer }) {
                     alert("Invalid ERC20 token address!");
                     return;
                 }
-                await NFTContract.approve(NFTAuctionToken.address, nftTokenId);
+                let isApproved = await NFTContract.getApproved(nftTokenId);
+                if (isApproved !== NFTAuctionToken.address) {
+                    await Sweet.fire("Please approve NFTAuctionToken contract to manage your NFT!", "", "error");
+                    await NFTContract.approve(NFTAuctionToken.address, nftTokenId);
+                    return;
+                }
+                console.log("approved")
                 const NFTAuctionContract = new ethers.Contract(NFTAuctionToken.address, NFTAuctionToken.abi, signer);
                 await NFTAuctionContract.createAuction(
                     nftAddress,
@@ -198,16 +208,21 @@ function NFTsPage({ signer }) {
                     formValues.initialPrice,
                     formValues.duration,
                 );
-                Swal.fire("Auction created successfully!", "", "success");
+                await Sweet.fire("Auction created successfully!", "", "success");
             } catch (error) {
                 console.error("Error creating auction:", error);
-                Swal.fire("Error creating auction!", error.message, "error");
+                await Sweet.fire("Error creating auction!", error.message, "error");
             }
 
         }
     }
 
     const checkIfERC20 = async (address) => {
+        if (!window.ethereum) {
+            alert("Please install MetaMask!");
+            return;
+        }
+        let provider = new ethers.providers.Web3Provider(window.ethereum);
         try {
             const contract = new ethers.Contract(address, [
                 "function name() view returns (string)",
