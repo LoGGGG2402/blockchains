@@ -17,17 +17,24 @@ contract NFTMarket is IERC721Receiver, ReentrancyGuard {
         IERC721 nftContract;
         uint256 tokenId;
         uint256 price;
-        address paymentToken;
+        address tokenPayment;
         bool isListed;
     }
 
     mapping(uint256 => Product) public products;
 
-    event ProductListed(uint256 productId, address owner, address nftContract, uint256 tokenId, uint256 price, address paymentToken);
+    event ProductListed(uint256 productId, address owner, address nftContract, uint256 tokenId, uint256 price, address tokenPayment);
     event ProductSold(uint256 productId, address buyer);
     event ProductUnlisted(uint256 productId);
 
-    function listProduct(address _nftContract, uint256 _tokenId, uint256 _price, address _paymentToken) external {
+    function listProduct(address _nftContract, uint256 _tokenId, uint256 _price, address _tokenPayment) external {
+        // check valid IERC721
+        require(IERC165(_nftContract).supportsInterface(type(IERC721).interfaceId), "Not an ERC721 contract");
+        // Ensure _tokenPayment is a valid ERC20 token or ETH address
+        if (_tokenPayment != address(0)) {
+            require(IERC165(_tokenPayment).supportsInterface(type(IERC20).interfaceId), "Payment token not ERC20");
+        }
+
         IERC721 nftContract = IERC721(_nftContract);
         require(nftContract.ownerOf(_tokenId) == msg.sender, "NFT not owned");
         require(nftContract.getApproved(_tokenId) == address(this), "NFT not approved");
@@ -39,14 +46,14 @@ contract NFTMarket is IERC721Receiver, ReentrancyGuard {
             nftContract: nftContract,
             tokenId: _tokenId,
             price: _price,
-            paymentToken: _paymentToken,
+            tokenPayment: _tokenPayment,
             isListed: true
         });
         nftContract.safeTransferFrom(msg.sender, address(this), _tokenId);
-        emit ProductListed(productId, msg.sender, _nftContract, _tokenId, _price, _paymentToken);
+        emit ProductListed(productId, msg.sender, _nftContract, _tokenId, _price, _tokenPayment);
     }
 
-    function unListProduct(uint256 _productId) external {
+    function unListProduct(uint256 _productId) external nonReentrant {
         Product storage product = products[_productId];
         require(product.owner == msg.sender, "Not owner");
         require(product.isListed, "Not listed");
@@ -60,7 +67,7 @@ contract NFTMarket is IERC721Receiver, ReentrancyGuard {
         require(product.isListed, "Not listed");
         require(product.price > 0, "Not for sale");
 
-        if (product.paymentToken == address(0)) {
+        if (product.tokenPayment == address(0)) {
             // Handle ETH payment
             require(msg.value >= product.price, "Insufficient ETH sent");
             uint256 excessAmount = msg.value - product.price;
@@ -71,18 +78,43 @@ contract NFTMarket is IERC721Receiver, ReentrancyGuard {
         } else {
             // Handle ERC20 token payment
             require(msg.value == 0, "Product requires token payment, ETH sent will be refunded");
-            IERC20 paymentToken = IERC20(product.paymentToken);
-            require(paymentToken.balanceOf(msg.sender) >= product.price, "Insufficient token balance");
-            require(paymentToken.allowance(msg.sender, address(this)) >= product.price, "Insufficient token allowance");
-            paymentToken.transferFrom(msg.sender, product.owner, product.price);
+            IERC20 tokenPayment = IERC20(product.tokenPayment);
+            require(tokenPayment.balanceOf(msg.sender) >= product.price, "Insufficient token balance");
+            require(tokenPayment.allowance(msg.sender, address(this)) >= product.price, "Insufficient token allowance");
+            tokenPayment.transferFrom(msg.sender, product.owner, product.price);
         }
-
-        product.nftContract.safeTransferFrom(address(this), msg.sender, product.tokenId);
         product.isListed = false;
+        product.nftContract.safeTransferFrom(address(this), msg.sender, product.tokenId);
         emit ProductSold(_productId, msg.sender);
     }
 
     function onERC721Received(address, address, uint256, bytes calldata) external pure override returns (bytes4) {
         return this.onERC721Received.selector;
+    }
+
+    function getProduct(uint256 _productId) external view returns (Product memory) {
+        return products[_productId];
+    }
+
+    function getAllListedProducts() external view returns (Product[] memory) {
+        uint256 productCount = nextProductId - 1;
+        uint256 listedProductCount = 0;
+
+        for (uint256 i = 1; i <= productCount; i++) {
+            if (products[i].isListed) {
+                listedProductCount++;
+            }
+        }
+
+        Product[] memory listedProducts = new Product[](listedProductCount);
+        uint256 index = 0;
+        for (uint256 i = 1; i <= productCount; i++) {
+            if (products[i].isListed) {
+                listedProducts[index] = products[i];
+                index++;
+            }
+        }
+
+        return listedProducts;
     }
 }

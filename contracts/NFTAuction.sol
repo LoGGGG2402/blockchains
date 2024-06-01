@@ -42,8 +42,6 @@ contract NFTAuction is IERC721Receiver, ReentrancyGuard {
     event WinnerBid(uint256 auctionId, uint256 winnerBid);
     event AuctionEnded(uint256 auctionId, address winner, uint256 winningBid);
     event AuctionExtended(uint256 auctionId, uint256 newEndTime);
-    event AuctionCancelled(uint256 auctionId);
-    event BidCancelled(uint256 auctionId, address bidder);
 
     event OrganizerChanged(address organizer);
     event ServiceFeeRateChanged(uint256 rate);
@@ -100,7 +98,7 @@ contract NFTAuction is IERC721Receiver, ReentrancyGuard {
             "NFTAuction: Invalid NFT contract address"
         );
         require(
-            IERC721(nftContract).supportsInterface(type(IERC721).interfaceId),
+            IERC165(nftContract).supportsInterface(type(IERC721).interfaceId),
             "NFTAuction: Contract does not support ERC721 interface"
         );
         require(
@@ -192,10 +190,10 @@ contract NFTAuction is IERC721Receiver, ReentrancyGuard {
     }
 
     function cancelBid(uint256 auctionId) public nonReentrant {
-        Auction storage auction = _auctions[auctionId];
         uint256 userBid = _bids[auctionId][msg.sender];
-
         require(userBid > 0, "NFTAuction: No bid found for user");
+
+        Auction storage auction = _auctions[auctionId];
         require(
             block.timestamp < auction.endTime,
             "NFTAuction: Auction has ended"
@@ -206,10 +204,7 @@ contract NFTAuction is IERC721Receiver, ReentrancyGuard {
         );
 
         _bids[auctionId][msg.sender] = 0;
-
         payable(msg.sender).transfer(userBid);
-
-        emit BidCancelled(auctionId, msg.sender);
     }
 
     function endAuction(uint256 auctionId) public nonReentrant {
@@ -219,6 +214,11 @@ contract NFTAuction is IERC721Receiver, ReentrancyGuard {
             "NFTAuction: Auction is still ongoing"
         );
         require(!auction.ended, "NFTAuction: Auction has already ended");
+        // only the auctioneer or winner can end the auction
+        require(
+            msg.sender == auction.auctioneer || msg.sender == auction.winner,
+            "NFTAuction: Only the auctioneer or winner can end the auction"
+        );
 
         auction.ended = true;
 
@@ -231,12 +231,14 @@ contract NFTAuction is IERC721Receiver, ReentrancyGuard {
             return;
         }
 
-        uint256 serviceFee = (auction.winnerBid * AUCTION_SERVICE_FEE_RATE) /
-            100;
+        uint256 serviceFee = (auction.winnerBid * AUCTION_SERVICE_FEE_RATE) / 100;
         uint256 finalAmount = auction.winnerBid - serviceFee;
         uint256 excessAmount = auction.highestBid - auction.winnerBid;
 
         // Refund the excess amount to the highest bidder (winner)
+
+        // Update the winner's bid to the 0
+        _bids[auctionId][auction.winner] = 0;
         if (excessAmount > 0) {
             payable(auction.winner).transfer(excessAmount);
         }
@@ -255,7 +257,10 @@ contract NFTAuction is IERC721Receiver, ReentrancyGuard {
 
     function withdrawBid(uint256 auctionId) public nonReentrant {
         Auction storage auction = _auctions[auctionId];
-        require(auction.ended, "NFTAuction: Auction is still ongoing");
+        require(
+            block.timestamp >= auction.endTime,
+            "NFTAuction: Auction is still ongoing"
+        );
         require(
             msg.sender != auction.winner,
             "NFTAuction: Winner cannot withdraw their bid"

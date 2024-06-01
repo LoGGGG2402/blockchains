@@ -32,18 +32,20 @@ function NFTsPage({ signer }) {
                 const nftsData = await Promise.all(promises);
                 // set nfts that owned by the signer
                 nftsData.filter(nft => nft.owner === signer._address);
-                console.log(signer._address)
                 setNfts(nftsData);
             } catch (error) {
-                console.error("Error fetching data:", error);
+                await Sweet.fire({
+                    icon: "error",
+                    title: "Failed to place bid.",
+                    html:JSON.stringify(error.reason || error.message || error),
+                });
             }
         }
 
-        fetchData().then(() => console.log("Data fetched"));
+        fetchData().then();
     }, []);
 
     const handleAddNFT = async (address, tokenId) => {
-        console.log("Adding NFT:", address, tokenId);
         if (!window.ethereum) {
             await Sweet.fire("Please install MetaMask!", "", "error");
             return;
@@ -57,7 +59,6 @@ function NFTsPage({ signer }) {
         ];
 
         const contract = new ethers.Contract(address, ERC721abi, provider);
-        console.log("Contract:", contract);
 
         const owner = await contract.ownerOf(tokenId);
         if (owner !== signer._address) {
@@ -78,7 +79,7 @@ function NFTsPage({ signer }) {
             tokenId: tokenId,
             address: contract.address,
             uri: uri,
-            owner: await signer.getAddress()
+            owner: signer._address
         };
 
         let nftsStorage = JSON.parse(localStorage.getItem("nfts")) || [];
@@ -86,24 +87,22 @@ function NFTsPage({ signer }) {
         localStorage.setItem("nfts", JSON.stringify(nftsStorage));
 
         setNfts([...nfts, nft]);
-        console.log("NFT added successfully!");
     };
 
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();
         //check if the NFT is already added
         if (nfts.find(nft => nft.address === address && nft.tokenId === tokenId)) {
-            Sweet.fire("NFT already added!", "", "error");
+            await Sweet.fire("NFT already added!", "", "error");
             return;
         }
-        handleAddNFT(address, tokenId).then(() => console.log("NFT added successfully!"));
+        handleAddNFT(address, tokenId).then();
         setAddress("");
         setTokenId("");
         setShowModal(false);
     };
 
     const handleCreateAuction = async (nftAddress, nftTokenId) => {
-        console.log("Creating auction for NFT:", nftAddress, nftTokenId);
         if (!window.ethereum) {
             await Sweet.fire("Please install MetaMask!", "", "error");
             return;
@@ -117,12 +116,9 @@ function NFTsPage({ signer }) {
         ];
 
         const NFTContract = new ethers.Contract(nftAddress, ERC721abi, signer);
-        console.log("Contract:", NFTContract);
 
         const owner = await NFTContract.ownerOf(nftTokenId);
         if (owner !== signer._address) {
-            console.log("Owner:", owner);
-            console.log("Signer:", signer._address)
             await Sweet.fire("You don't own this NFT!", "", "error");
             return;
         }
@@ -168,31 +164,30 @@ function NFTsPage({ signer }) {
             }
         });
 
-        console.log("Form values:", formValues)
-
         if (formValues) {
             try {
                 if (formValues.paymentToken === "" || formValues.paymentToken === null || formValues.paymentToken === undefined) {
                     let isApproved = await NFTContract.getApproved(nftTokenId);
                     if (isApproved !== NFTAuction.address) {
                         await Sweet.fire("Please approve NFTAuction contract to manage your NFT!", "", "error");
-                        await NFTContract.approve(NFTAuction.address, nftTokenId);
-                        return;
+                        const approveTx = await NFTContract.approve(NFTAuction.address, nftTokenId);
+                        await approveTx.wait();
                     }
-                    console.log("approved")
                     const NFTAuctionContract = new ethers.Contract(NFTAuction.address, NFTAuction.abi, signer);
-                    console.log("NFTAuctionContract", NFTAuctionContract)
-                    await NFTAuctionContract.createAuction(
+                    const createAuctionTx = await NFTAuctionContract.createAuction(
                         nftAddress,
                         nftTokenId,
                         formValues.initialPrice,
                         formValues.duration,
                     );
-                    await Sweet.fire("Auction created successfully!", "", "success");
+                    await createAuctionTx.wait();
+                    // remove NFT from local storage and state
                     let nftsStorage = JSON.parse(localStorage.getItem("nfts")) || [];
                     nftsStorage = nftsStorage.filter(nft => nft.tokenId !== nftTokenId);
                     localStorage.setItem("nfts", JSON.stringify(nftsStorage));
                     setNfts(nfts.filter(nft => nft.tokenId !== nftTokenId));
+                    // show success message
+                    await Sweet.fire("Auction created successfully!", "", "success");
                     return;
                 }
                 // check payment token is valid ERC20 token
@@ -204,26 +199,31 @@ function NFTsPage({ signer }) {
                 let isApproved = await NFTContract.getApproved(nftTokenId);
                 if (isApproved !== NFTAuctionToken.address) {
                     await Sweet.fire("Please approve NFTAuctionToken contract to manage your NFT!", "", "error");
-                    await NFTContract.approve(NFTAuctionToken.address, nftTokenId);
-                    return;
+                    const approveTx = await NFTContract.approve(NFTAuctionToken.address, nftTokenId);
+                    await approveTx.wait();
                 }
-                console.log("approved")
                 const NFTAuctionContract = new ethers.Contract(NFTAuctionToken.address, NFTAuctionToken.abi, signer);
-                await NFTAuctionContract.createAuction(
+                const createAuctionTx = await NFTAuctionContract.createAuction(
                     nftAddress,
                     nftTokenId,
                     formValues.paymentToken,
                     formValues.initialPrice,
                     formValues.duration,
                 );
+                await createAuctionTx.wait();
+                // remove NFT from local storage and state
                 let nftsStorage = JSON.parse(localStorage.getItem("nfts")) || [];
                 nftsStorage = nftsStorage.filter(nft => nft.tokenId !== nftTokenId && nft.address !== nftAddress);
                 localStorage.setItem("nfts", JSON.stringify(nftsStorage));
                 setNfts(nfts.filter(nft => nft.tokenId !== nftTokenId));
+                // show success message
                 await Sweet.fire("Auction created successfully!", "", "success");
             } catch (error) {
-                console.error("Error creating auction:", error);
-                await Sweet.fire("Error creating auction!", error.message, "error");
+                await Sweet.fire({
+                    icon: "error",
+                    title: "Failed to place bid.",
+                    html:JSON.stringify(error.reason || error.message || error),
+                });
             }
 
         }
@@ -248,7 +248,11 @@ function NFTsPage({ signer }) {
 
             return {name, symbol, decimals};
         } catch (error) {
-            console.error("Error fetching ERC20 token:", error);
+            await Sweet.fire({
+                icon: "error",
+                title: "Failed to place bid.",
+                html:JSON.stringify(error.reason || error.message || error),
+            });
             return false;
         }
     };

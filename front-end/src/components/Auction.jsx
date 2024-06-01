@@ -31,7 +31,6 @@ function Auction({ auctionContract, auctionId, signer }) {
             try {
                 const provider = new ethers.providers.Web3Provider(window.ethereum);
                 const auctionInfo = await auctionContract.getAuctionDetails(auctionId);
-                console.log("Auction Info:", auctionInfo)
                 const { auctioneer, nftContract, nftId, endTime, ended, winnerBid, tokenPayment } = auctionInfo;
                 setAuctioneer(auctioneer);
                 setEndTime(endTime);
@@ -49,6 +48,8 @@ function Auction({ auctionContract, auctionId, signer }) {
                 const uri = await contract.tokenURI(nftId);
                 const response = await axios.get(uri);
                 const nft = {
+                    tokenId: nftId.toNumber(),
+                    address: nftContract,
                     name: response.data.name,
                     description: response.data.description,
                     image: response.data.image,
@@ -82,18 +83,20 @@ function Auction({ auctionContract, auctionId, signer }) {
                     ];
 
                     const tokenContract = new ethers.Contract(tokenPayment, ERC20abi, provider);
-                    console.log("Token Contract:", tokenContract)
                     setPaymentContract(tokenContract);
 
                     const symbol = await tokenContract.symbol();
-                    console.log("Symbol:", symbol)
                     const decimals = await tokenContract.decimals();
 
                     setSymbol(symbol);
                     setWinnerBid(ethers.utils.formatUnits(winnerBid, decimals));
                 }
             } catch (error) {
-                console.error("Error fetching auction details:", error);
+                await Sweet.fire({
+                    icon: "error",
+                    title: "Error fetching auction details!",
+                    html: JSON.stringify(error.reason || error.message || error),
+                });
             } finally {
                 setLoading(false);
             }
@@ -144,67 +147,70 @@ function Auction({ auctionContract, auctionId, signer }) {
 
             }
         } catch (error) {
-            console.error("Error placing bid:", error);
             await Sweet.fire({
                 icon: "error",
                 title: "Failed to place bid.",
+                html:JSON.stringify(error.reason || error.message || error),
             });
         } finally {
             setLoading(false);
         }
     };
-
-    const cancelAuction = async () => {
-    }
     const cancelBid = async () => {
         try {
-            await auctionContract.connect(signer).cancelBid(auctionId);
+            const tx = await auctionContract.connect(signer).cancelBid(auctionId);
+            await tx.wait();
             await Sweet.fire({
                 icon: "success",
                 title: "Bid cancelled successfully!",
             });
         } catch (error) {
-            console.error("Error cancelling bid:", error);
             await Sweet.fire({
                 icon: "error",
                 title: "Failed to cancel bid.",
+                html:JSON.stringify(error.reason || error.message || error),
             });
         }
     }
+
     const withdraw = async () => {
         try {
-            await auctionContract.connect(signer).withdrawBid(auctionId);
+            const tx = await auctionContract.connect(signer).withdrawBid(auctionId);
+            await tx.wait();
             await Sweet.fire({
                 icon: "success",
                 title: "Withdrawn successfully!",
             });
         } catch (error) {
-            console.error("Error withdrawing:", error);
             await Sweet.fire({
                 icon: "error",
                 title: "Failed to withdraw.",
+                html:JSON.stringify(error.reason || error.message || error),
             });
         }
     }
     const endAuction = async () => {
         try {
-            await auctionContract.connect(signer).endAuction(auctionId);
+            const tx = await auctionContract.connect(signer).endAuction(auctionId);
+            await tx.wait();
             await Sweet.fire({
                 icon: "success",
                 title: "Auction ended successfully!",
             });
         } catch (error) {
-            console.error("Error ending auction:", error);
             await Sweet.fire({
                 icon: "error",
                 title: "Failed to end auction.",
+                html:JSON.stringify(error.reason || error.message || error),
             });
         }
     }
+
     const claimNFT = async (tokenId, address) => {
         let nfts = localStorage.getItem("nfts") ? JSON.parse(localStorage.getItem("nfts")) : [];
         // check if nft is already claimed by nftId and address
-        if (nfts.find(nft => nft.tokenId === tokenId && nft.address === address)) {
+        console.log(nfts, tokenId, address)
+        if (nfts.find(nft => nft.tokenId.valueOf() === tokenId.valueOf() && nft.address === address)) {
             await Sweet.fire({
                 icon: "error",
                 title: "NFT already claimed!",
@@ -296,7 +302,7 @@ function Auction({ auctionContract, auctionId, signer }) {
                                 Withdraw
                             </button>
                         )}
-                        {signer._address === auctioneer && !ended && (
+                        {signer._address === auctioneer || isWinner && !ended && Math.floor(Date.now() / 1000) -endTime >= 60 && (
                             <div>
                                 <button
                                     className="mt-2 w-full bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded transition duration-300"
@@ -304,21 +310,12 @@ function Auction({ auctionContract, auctionId, signer }) {
                                 >
                                     End Auction
                                 </button>
-                                { endTime - Math.floor(Date.now() / 1000) > 60
-                                    && (
-                                <button
-                                    className="mt-2 w-full bg-blue-500 hover:bg-gray-700 text-white font-bold py-1 px-2 rounded transition duration-300"
-                                    onClick={cancelAuction}
-                                >
-                                    Cancel Auction
-                                </button>
-                                )}
                             </div>
                         )}
                         {isWinner && ended && (
                             <button
                                 className="mt-2 w-full bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded transition duration-300"
-                                onClick={() => claimNFT(nftId, nftContract)}
+                                onClick={() => claimNFT(nft.tokenId, nft.address)}
                             >
                                 Claim NFT
                             </button>
