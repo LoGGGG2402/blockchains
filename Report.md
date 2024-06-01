@@ -7,7 +7,7 @@
 Blockchain technology's decentralized framework has unlocked new opportunities for digital assets, particularly through Non-Fungible Tokens (NFTs). NFTs symbolize distinct digital assets, and auctions have emerged as a favored method for their trading. We’ll explore how to build an Ethereum-based NFT auction smart contract, focusing on implementing a `second-price auction` (also known as a Vickrey auction).
 ## II. Smart Contract Structure
 ### 1. NFT Smart Contract (for testing)
-OnePieceNFT.sol
+Source: `OnePieceNFT.sol`
 ```solidity
 // SPDX-License-Identifier: MIT
 // Compatible with OpenZeppelin Contracts ^5.0.0
@@ -119,4 +119,274 @@ By extending `ReentrancyGuard` and implementing `IERC721Receiver`, the `NFTAucti
 -   **BidCancelled**: Indicates that a bid has been cancelled, specifying the auction ID and the bidder's address.
 -   **OrganizerChanged**: Signals a change in the auction organizer.
 -   **ServiceFeeRateChanged**: Indicates a change in the service fee rate for the auctions.
+
+---
+
+**Start Auction**:
+Initiates a new auction by transferring the NFT to the contract and defining auction parameters.
+```solidity
+function createAuction(
+        address nftContract,
+        uint256 nftId,
+        uint256 initialPrice,
+        uint256 duration
+    ) public returns (uint256){
+        require(
+            nftContract != address(0),
+            "NFTAuction: Invalid NFT contract address"
+        );
+        require(
+            IERC721(nftContract).supportsInterface(type(IERC721).interfaceId),
+            "NFTAuction: Contract does not support ERC721 interface"
+        );
+        require(
+            IERC721(nftContract).ownerOf(nftId) != address(0),
+            "NFTAuction: NFT does not exist"
+        );
+        require(
+            IERC721(nftContract).ownerOf(nftId) == msg.sender,
+            "NFTAuction: Not the owner of the NFT"
+        );
+        require(
+            initialPrice > 0,
+            "NFTAuction: Reserve price must be greater than zero"
+        );
+        require(
+            duration > 0 && duration <= 30 days,
+            "NFTAuction: Invalid auction duration"
+        );
+
+        IERC721 _nftContract = IERC721(nftContract);
+        _nftContract.safeTransferFrom(msg.sender, address(this), nftId);
+
+        uint256 endTime = block.timestamp + duration;
+
+        uint256 auctionId = _auctionIdCounter++;
+
+        Auction memory _auction = Auction({
+            auctioneer: msg.sender,
+            nftContract: _nftContract,
+            nftId: nftId,
+            endTime: endTime,
+            ended: false,
+            highestBid: initialPrice,
+            winnerBid: initialPrice,
+            winner: address(0)
+        });
+
+        _auctions[auctionId] = _auction;
+
+        emit AuctionCreated(
+            auctionId,
+            nftContract,
+            nftId,
+            initialPrice,
+            endTime
+        );
+
+        return auctionId;
+    }
+```
+-   **Function Name**: `createAuction`
+-   **Description**: Initiates a new auction by transferring the NFT to the contract and setting auction parameters.
+-   **Parameters**:
+    -   `address nftContract`: The address of the NFT contract.
+    -   `uint256 nftId`: The ID of the NFT to be auctioned.
+    -   `uint256 initialPrice`: The initial price for the auction.
+    -   `uint256 duration`: The duration of the auction in seconds.
+-   **Returns**: The auction ID of the newly created auction.
+-   **Requirements**:
+    -   The NFT contract address must be valid.
+    -   The NFT contract must support the ERC721 interface.
+    -   The NFT must exist and be owned by the caller.
+    -   The initial price must be greater than zero.
+    -   The duration must be greater than zero and less than or equal to 30 days.
+-   **Emits**: `AuctionCreated` event with auction details.
+
+---
+
+**Place Bid**:
+Allows users to bid on ongoing auctions, updating the highest bid and bidder.
+```solidity
+function placeBid(uint256 auctionId) public payable nonReentrant returns (uint256){
+        Auction storage auction = _auctions[auctionId];
+        require(
+            block.timestamp < auction.endTime,
+            "NFTAuction: Auction has ended"
+        );
+        require(msg.value > 0, "NFTAuction: Bid must be greater than zero");
+
+        uint256 currentBid = _bids[auctionId][msg.sender] + msg.value;
+        require(
+            currentBid > auction.winnerBid,
+            "NFTAuction: Bid must be higher than the current highest bid"
+        );
+
+        if (block.timestamp + EXTENSION_DURATION > auction.endTime) {
+            auction.endTime += EXTENSION_DURATION;
+            emit AuctionExtended(auctionId, auction.endTime);
+        }
+
+        _bids[auctionId][msg.sender] = currentBid;
+
+        if (currentBid > auction.highestBid) {
+            if (auction.winner != msg.sender){
+                auction.winnerBid = auction.highestBid;
+                auction.highestBid = currentBid;
+                auction.winner = msg.sender;
+            } else {
+                auction.highestBid = currentBid;
+            }
+        } else if (currentBid > auction.winnerBid) {
+            auction.winnerBid = currentBid;
+        }
+
+        emit WinnerBid(auctionId, currentBid);
+
+        emit BidPlaced(auctionId, msg.sender);
+
+        return currentBid;
+    }
+```
+-   **Function Name**: `placeBid`
+-   **Description**: Allows users to place bids on ongoing auctions, updating the highest bid and bidder.
+-   **Parameters**:
+    -   `uint256 auctionId`: The ID of the auction.
+-   **Returns**: The current bid amount.
+-   **Requirements**:
+    -   The auction must be ongoing (not ended).
+    -   The bid amount must be greater than zero.
+    -   The bid must be higher than the current highest bid.
+-   **Extends Auction**: If a bid is placed in the last 10 minutes, the auction is extended by 10 minutes.
+-   **Emits**:
+    -   `AuctionExtended` event if the auction end time is extended.
+    -   `WinnerBid` event with the highest bid amount.
+    -   `BidPlaced` event with the auction ID and bidder's address.
+
+---
+
+**End Auction**:
+Concludes an auction, transfers the NFT to the winner, and handles payment distribution.
+```solidity
+function endAuction(uint256 auctionId) public nonReentrant {
+    Auction storage auction = _auctions[auctionId];
+    require(
+        block.timestamp >= auction.endTime,
+        "NFTAuction: Auction is still ongoing"
+    );
+    require(!auction.ended, "NFTAuction: Auction has already ended");
+
+    auction.ended = true;
+
+    if (auction.winner == address(0)) {
+        auction.nftContract.safeTransferFrom(
+            address(this),
+            auction.auctioneer,
+            auction.nftId
+        );
+        return;
+    }
+
+    uint256 serviceFee = (auction.winnerBid * AUCTION_SERVICE_FEE_RATE) /
+        100;
+    uint256 finalAmount = auction.winnerBid - serviceFee;
+    uint256 excessAmount = auction.highestBid - auction.winnerBid;
+
+    // Refund the excess amount to the highest bidder (winner)
+    if (excessAmount > 0) {
+        payable(auction.winner).transfer(excessAmount);
+    }
+
+    payable(_organizer).transfer(serviceFee);
+    payable(auction.auctioneer).transfer(finalAmount);
+
+    auction.nftContract.safeTransferFrom(
+        address(this),
+        auction.winner,
+        auction.nftId
+    );
+
+    emit AuctionEnded(auctionId, auction.winner, auction.winnerBid);
+}
+```
+-   **Function Name**: `endAuction`
+-   **Description**: Concludes an auction, transfers the NFT to the winner, and handles payment distribution.
+-   **Parameters**:
+    -   `uint256 auctionId`: The ID of the auction to be ended.
+-   **Requirements**:
+    -   The auction must have ended (time elapsed).
+    -   The auction must not have already ended.
+-   **Actions**:
+    -   Transfers the NFT to the auction winner or back to the auctioneer if no winner.
+    -   Calculates and transfers the service fee to the organizer.
+    -   Transfers the winning bid amount minus the service fee to the auctioneer.
+    -   Refunds any excess amount to the highest bidder.
+-   **Emits**: `AuctionEnded` event with the auction ID, winner, and winning bid amount.
+
+---
+
+**Cancel Bid**:
+Allows users to cancel their bids on ongoing auctions and get a refund.
+```solidity
+function cancelBid(uint256 auctionId) public nonReentrant {
+        Auction storage auction = _auctions[auctionId];
+        uint256 userBid = _bids[auctionId][msg.sender];
+
+        require(userBid > 0, "NFTAuction: No bid found for user");
+        require(
+            block.timestamp < auction.endTime,
+            "NFTAuction: Auction has ended"
+        );
+        require(
+            msg.sender != auction.winner,
+            "NFTAuction: Winner cannot cancel the bid"
+        );
+
+        _bids[auctionId][msg.sender] = 0;
+
+        payable(msg.sender).transfer(userBid);
+
+        emit BidCancelled(auctionId, msg.sender);
+    }
+```
+-   **Function Name**: `cancelBid`
+-   **Description**: Allows users to cancel their bids on ongoing auctions and get a refund.
+-   **Parameters**:
+    -   `uint256 auctionId`: The ID of the auction for which the bid is to be canceled.
+-   **Requirements**:
+    -   The bid must exist for the user.
+    -   The auction must still be ongoing.
+    -   The user must not be the current highest bidder.
+-   **Actions**: Refunds the user's bid amount.
+-   **Emits**: `BidCancelled` event with the auction ID and bidder's address.
+---
+**Withdraw Bid:**
+Allows users to withdraw their bid amounts if they are not the current highest bidder or after the auction has ended without winning.
+```solidity
+function withdrawBid(uint256 auctionId) public nonReentrant {
+        Auction storage auction = _auctions[auctionId];
+        require(auction.ended, "NFTAuction: Auction is still ongoing");
+        require(
+            msg.sender != auction.winner,
+            "NFTAuction: Winner cannot withdraw their bid"
+        );
+
+        uint256 userBid = _bids[auctionId][msg.sender];
+        require(userBid > 0, "NFTAuction: No bid to withdraw");
+
+        _bids[auctionId][msg.sender] = 0;
+
+        payable(msg.sender).transfer(userBid);
+    }
+```
+-   **Function Name**: `withdrawBid`
+-   **Description**: Allows users to withdraw their bid amounts if they are not the current highest bidder or after the auction has ended without winning.
+-   **Parameters**:
+    -   `uint256 auctionId`: The ID of the auction for which the bid is to be withdrawn.
+-   **Requirements**:
+    -   The bid must exist for the user.
+    -   The user must not be the auction winner.
+    -   The user must not be the highest bidder during an ongoing auction.
+    -   If the auction has ended, the user can withdraw their bid if they are not the winner.
+-   **Actions**: Refunds the user's bid amount.
 
