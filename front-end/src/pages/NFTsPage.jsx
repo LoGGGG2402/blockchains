@@ -1,17 +1,24 @@
 import NFT from "../components/NFT.jsx";
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import axios from "axios";
 import {ethers} from "ethers";
 import Sweet from "sweetalert2";
 
 import NFTAuction from "../assets/contracts/NFTAuction.json";
 import NFTAuctionToken from "../assets/contracts/NFTAuctionToken.json";
+import NFTMarket from "../assets/contracts/NFTMarket.json";
 
 function NFTsPage({ signer }) {
     const [nfts, setNfts] = useState([]);
     const [address, setAddress] = useState("");
     const [tokenId, setTokenId] = useState("");
+
     const [showModal, setShowModal] = useState(false);
+    const [modalType, setModalType] = useState(null);
+    const modalRef = useRef(null);
+
+    const [chosenNFT, setChosenNFT] = useState(null);
+
 
 
     useEffect(() => {
@@ -45,7 +52,7 @@ function NFTsPage({ signer }) {
         fetchData().then();
     }, []);
 
-    const handleAddNFT = async (address, tokenId) => {
+    const addNFT = async (address, tokenId) => {
         if (!window.ethereum) {
             await Sweet.fire("Please install MetaMask!", "", "error");
             return;
@@ -96,13 +103,13 @@ function NFTsPage({ signer }) {
             await Sweet.fire("NFT already added!", "", "error");
             return;
         }
-        handleAddNFT(address, tokenId).then();
+        await addNFT(address, tokenId).then();
         setAddress("");
         setTokenId("");
         setShowModal(false);
     };
 
-    const handleCreateAuction = async (nftAddress, nftTokenId) => {
+    const createAuction = async (nftAddress, nftTokenId) => {
         if (!window.ethereum) {
             await Sweet.fire("Please install MetaMask!", "", "error");
             return;
@@ -229,6 +236,86 @@ function NFTsPage({ signer }) {
         }
     }
 
+    const listProduct = async (nftAddress, nftTokenId) => {
+        if (!window.ethereum) {
+            await Sweet.fire("Please install MetaMask!", "", "error");
+            return;
+        }
+        let ERC721abi = [
+            "function tokenURI(uint256 tokenId) view returns (string)",
+            "function approve(address to, uint256 tokenId)",
+            "function balanceOf(address owner) view returns (uint256)",
+            "function ownerOf(uint256 tokenId) view returns (address)",
+            "function getApproved(uint256 tokenId) view returns (address)"
+        ];
+
+        const NFTContract = new ethers.Contract(nftAddress, ERC721abi, signer);
+
+        const owner = await NFTContract.ownerOf(nftTokenId);
+        if (owner !== signer._address) {
+            await Sweet.fire("You don't own this NFT!", "", "error");
+            return;
+        }
+
+        const {value: formValues} = await Sweet.fire({
+            title: "List Product",
+            html:
+                '<input id="price" class="swal2-input" placeholder="Price">' +
+                '<input id="paymentToken" class="swal2-input" placeholder="Payment Token Address">',
+            focusConfirm: false,
+            preConfirm: () => {
+                return {
+                    price: ethers.utils.parseEther(document.getElementById("price").value),
+                    paymentToken: document.getElementById("paymentToken").value,
+                };
+            }
+        });
+
+        if (formValues) {
+            try {
+                if (formValues.paymentToken === "" || formValues.paymentToken === null || formValues.paymentToken === undefined || formValues.paymentToken === ethers.constants.AddressZero || formValues.paymentToken === "0x") {
+                    formValues.paymentToken = ethers.constants.AddressZero;
+                }
+                let isApproved = await NFTContract.getApproved(nftTokenId);
+                if (isApproved !== NFTMarket.address) {
+                    await Sweet.fire("Please approve NFTMarket contract to manage your NFT!", "", "error");
+                    const approveTx = await NFTContract.approve(NFTMarket.address, nftTokenId);
+                    await approveTx.wait();
+                }
+                const NFTMarketContract = new ethers.Contract(NFTMarket.address, NFTMarket.abi, signer);
+                const listProductTx = await NFTMarketContract.listProduct(
+                    nftAddress,
+                    nftTokenId,
+                    formValues.price,
+                    formValues.paymentToken
+                );
+                await listProductTx.wait();
+                // remove NFT from local storage and state
+                let nftsStorage = JSON.parse(localStorage.getItem("nfts")) || [];
+                nftsStorage = nftsStorage.filter(nft => nft.tokenId !== nftTokenId);
+                localStorage.setItem("nfts", JSON.stringify(nftsStorage));
+                setNfts(nfts.filter(nft => nft.tokenId !== nftTokenId));
+                // show success message
+                await Sweet.fire("Product listed successfully!", "", "success");
+            } catch (error) {
+                await Sweet.fire({
+                    icon: "error",
+                    title: "Failed to place bid.",
+                    html:JSON.stringify(error.reason || error.message || error),
+                });
+            }
+        }
+
+
+    }
+
+    const handleNFTClick = (nft) => {
+        setShowModal(true);
+        setModalType("options");
+        setChosenNFT(nft);
+    };
+
+
     const checkIfERC20 = async (address) => {
         if (!window.ethereum) {
             await Sweet.fire("Please install MetaMask!", "", "error");
@@ -256,73 +343,107 @@ function NFTsPage({ signer }) {
             return false;
         }
     };
-    const toggleModal = () => {
-        setShowModal(!showModal);
-    };
+
     const handleOutsideClick = (e) => {
-        if (e.target.id === 'modal-background') {
+        if (modalRef.current && !modalRef.current.contains(e.target)) {
             setShowModal(false);
         }
     };
 
     return (
         <div className="container mx-auto">
-            
             <div>
-            <button
-                onClick={toggleModal}
-                className="bg-blue-500 text-white p-2 rounded mb-4 hover:bg-blue-600 mt-4"
-            >
-                Import NFT
-            </button>
-            {showModal && (
-                <div
-                    id="modal-background"
-                    className="fixed inset-0 flex items-center justify-center z-50"
-                    onClick={handleOutsideClick}
+                <button
+                    onClick={() => {
+                        setShowModal(true)
+                        setModalType("import")
+                    }}
+                    className="bg-blue-500 text-white p-2 rounded mb-4 hover:bg-blue-600 mt-4"
                 >
-                    <div className="absolute inset-0 bg-black opacity-50"></div>
-                    <div className="bg-white p-6 rounded-lg shadow-lg z-10 w-96 relative">
-                        <h2 className="text-2xl mb-4">Import NFT</h2>
-                        <form onSubmit={handleSubmit} className="mb-8">
+                    Import NFT
+                </button>
+                {showModal && modalType === "import" && (
+                    <div id="modal-background"
+                         className="fixed inset-0 flex items-center justify-center z-50"
+                         onClick={handleOutsideClick}
+                    >
+                        <div className="absolute inset-0 bg-black opacity-50"></div>
+                        <div className="bg-white p-6 rounded-lg shadow-lg z-10 w-96 relative">
+                            <h2 className="text-2xl mb-4">Import NFT</h2>
+                            <form onSubmit={handleSubmit} className="mb-8">
+                                <div className="flex flex-col items-center">
+                                    <input
+                                        type="text"
+                                        placeholder="NFT Contract Address"
+                                        value={address}
+                                        onChange={(e) => setAddress(e.target.value)}
+                                        className="mb-4 p-2 border border-gray-300 rounded w-full"
+                                        required
+                                    />
+                                    <input
+                                        type="text"
+                                        placeholder="NFT Token ID"
+                                        value={tokenId}
+                                        onChange={(e) => setTokenId(e.target.value)}
+                                        className="mb-4 p-2 border border-gray-300 rounded w-full"
+                                        required
+                                    />
+                                    <button
+                                        type="submit"
+                                        className="bg-blue-500 text-white p-2 rounded w-full"
+                                    >
+                                        Import NFT
+                                    </button>
+                                </div>
+                            </form>
+                            <button
+                                onClick={() => setShowModal(false)}
+                                className="absolute top-2 right-2 bg-gray-300 p-2 rounded-full"
+                            >
+                                &times;
+                            </button>
+                        </div>
+                    </div>
+                )}
+                {showModal && modalType === "options" && (
+                    <div id="modal-background"
+                         className="fixed inset-0 flex items-center justify-center z-50"
+                         onClick={handleOutsideClick}
+                    >
+                        <div className="absolute inset-0 bg-black opacity-50"></div>
+                        <div className="bg-white p-6 rounded-lg shadow-lg z-10 w-96 relative">
+                            <h2 className="text-2xl mb-4">Choose Type</h2>
                             <div className="flex flex-col items-center">
-                                <input
-                                    type="text"
-                                    placeholder="NFT Contract Address"
-                                    value={address}
-                                    onChange={(e) => setAddress(e.target.value)}
-                                    className="mb-4 p-2 border border-gray-300 rounded w-full"
-                                    required
-                                />
-                                <input
-                                    type="text"
-                                    placeholder="NFT Token ID"
-                                    value={tokenId}
-                                    onChange={(e) => setTokenId(e.target.value)}
-                                    className="mb-4 p-2 border border-gray-300 rounded w-full"
-                                    required
-                                />
                                 <button
-                                    type="submit"
-                                    className="bg-blue-500 text-white p-2 rounded w-full"
+                                    onClick={() => {
+                                        createAuction(chosenNFT.address, chosenNFT.tokenId).then();
+                                    }}
+                                    className="bg-blue-500 text-white p-2 rounded mb-4 w-full"
                                 >
-                                    Import NFT
+                                    Create Auction
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        listProduct(chosenNFT.address, chosenNFT.tokenId).then();
+                                    }}
+                                    className="bg-green-500 text-white p-2 rounded w-full"
+                                >
+                                    List Product
                                 </button>
                             </div>
-                        </form>
-                        <button
-                            onClick={toggleModal}
-                            className="absolute top-2 right-2 bg-gray-300 p-2 rounded-full"
-                        >
-                            &times;
-                        </button>
+                            <button
+                                onClick={() => setShowModal(false)}
+                                className="absolute top-2 right-2 bg-gray-300 p-2 rounded-full"
+                            >
+                                &times;
+                            </button>
+                        </div>
                     </div>
-                </div>
-            )}
-        </div>
-            <div className="flex flex-wrap ">
+                )}
+            </div>
+            <div className="flex flex-wrap">
                 {nfts.map((nft, index) => (
-                    <div key={index} onClick={() => handleCreateAuction(nft.address, nft.tokenId)}>
+                    <div key={index} onClick={() => handleNFTClick(nft)}>
                         <NFT
                             image={nft.image}
                             name={nft.name}
