@@ -31,7 +31,8 @@ function Auction({ auctionContract, auctionId, signer }) {
             try {
                 const provider = new ethers.providers.Web3Provider(window.ethereum);
                 const auctionInfo = await auctionContract.getAuctionDetails(auctionId);
-                const { auctioneer, nftContract, nftId, endTime, ended, winnerBid, paymentToken } = auctionInfo;
+                console.log("Auction Info:", auctionInfo)
+                const { auctioneer, nftContract, nftId, endTime, ended, winnerBid, tokenPayment } = auctionInfo;
                 setAuctioneer(auctioneer);
                 setEndTime(endTime);
                 setEnded(ended);
@@ -67,7 +68,7 @@ function Auction({ auctionContract, auctionId, signer }) {
                 }
 
                 setNft(nft);
-                if (!paymentToken) {
+                if (!tokenPayment) {
                     setWinnerBid(ethers.utils.formatEther(winnerBid));
                     setSymbol("ETH");
                 } else {
@@ -80,10 +81,12 @@ function Auction({ auctionContract, auctionId, signer }) {
                         "function decimals() view returns (uint8)",
                     ];
 
-                    const tokenContract = new ethers.Contract(paymentToken, ERC20abi, provider);
+                    const tokenContract = new ethers.Contract(tokenPayment, ERC20abi, provider);
+                    console.log("Token Contract:", tokenContract)
                     setPaymentContract(tokenContract);
 
                     const symbol = await tokenContract.symbol();
+                    console.log("Symbol:", symbol)
                     const decimals = await tokenContract.decimals();
 
                     setSymbol(symbol);
@@ -119,7 +122,7 @@ function Auction({ auctionContract, auctionId, signer }) {
                     const amountInWei = ethers.utils.parseUnits(bidAmount, await paymentContract.decimals());
                     const allowance = await paymentContract.allowance(signer._address, auctionContract.address);
                     if (allowance.lt(amountInWei)) {
-                        const approveTx = await paymentContract.approve(auctionContract.address, amountInWei);
+                        const approveTx = await paymentContract.connect(signer).approve(auctionContract.address, amountInWei);
                         await approveTx.wait();
                     }
                     tx = await contractWithSigner.placeBid(auctionId, amountInWei);

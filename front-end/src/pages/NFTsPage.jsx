@@ -115,6 +115,8 @@ function NFTsPage({ signer }) {
 
         const owner = await NFTContract.ownerOf(nftTokenId);
         if (owner !== signer._address) {
+            console.log("Owner:", owner);
+            console.log("Signer:", signer._address)
             await Sweet.fire("You don't own this NFT!", "", "error");
             return;
         }
