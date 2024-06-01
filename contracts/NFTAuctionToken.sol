@@ -16,7 +16,7 @@ contract NFTAuctionToken is IERC721Receiver, ReentrancyGuard {
     address public _organizer;
 
     uint256 public constant EXTENSION_DURATION = 10 minutes; // if bid in last 10 minutes, extend auction by 10 minutes
-    uint256 public constant AUCTION_SERVICE_FEE_RATE = 3; // Percentage
+    uint256 public AUCTION_SERVICE_FEE_RATE = 0; // Percentage
 
     struct Auction {
         address auctioneer;
@@ -328,6 +328,14 @@ contract NFTAuctionToken is IERC721Receiver, ReentrancyGuard {
             "NFTAuction: Invalid auction ID"
         );
         return _bids[auctionId][msg.sender];
+    }
+
+    function isWinner(uint256 auctionId) external view returns (bool){
+        require(
+            auctionId > 0 && auctionId < _auctionIdCounter,
+            "NFTAuction: Invalid auction ID"
+        );
+        return _auctions[auctionId].winner == msg.sender;
     }
 
     function getOngoingAuctions() external view returns (uint256[] memory) {

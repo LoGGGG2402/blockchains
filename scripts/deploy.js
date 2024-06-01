@@ -11,21 +11,22 @@ async function main() {
     const AuctionToken = await hre.ethers.getContractFactory("NFTAuctionToken")
     const auctionToken = await AuctionToken.deploy()
 
-    // const Token = await hre.ethers.getContractFactory("Token")
-    // const token = await Token.deploy(deployer.address)
+    const Token = await hre.ethers.getContractFactory("Token")
+    const token = await Token.deploy(deployer.address)
 
     // deploy OnePieceNFT contract
-    const OP_NFT = await hre.ethers.getContractFactory("OnePieceNFT")
-    const op_nft = await OP_NFT.deploy()
+    // const OP_NFT = await hre.ethers.getContractFactory("OnePieceNFT")
+    // const op_nft = await OP_NFT.deploy()
 
-    console.log("OnePieceNFT deployed to:", op_nft.target)
+    // console.log("OnePieceNFT deployed to:", op_nft.target)
     console.log("NFTAuction deployed to:", auction.target)
     console.log("NFTAuctionToken deployed to:", auctionToken.target)
-    // console.log("Token deployed to:", token.target)
+    console.log("Token deployed to:", token.target)
 
-    saveFrontendFiles("OnePieceNFT", op_nft.target)
+    // saveFrontendFiles("OnePieceNFT", op_nft.target)
     saveFrontendFiles("NFTAuction", auction.target)
     saveFrontendFiles("NFTAuctionToken", auctionToken.target)
+    saveFrontendFiles("Token", token.target)
 }
 
 // function to save addresses and ABIs to frontend
