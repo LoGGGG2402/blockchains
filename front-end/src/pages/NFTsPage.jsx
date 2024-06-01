@@ -91,9 +91,15 @@ function NFTsPage({ signer }) {
 
     const handleSubmit = (event) => {
         event.preventDefault();
+        //check if the NFT is already added
+        if (nfts.find(nft => nft.address === address && nft.tokenId === tokenId)) {
+            Sweet.fire("NFT already added!", "", "error");
+            return;
+        }
         handleAddNFT(address, tokenId).then(() => console.log("NFT added successfully!"));
         setAddress("");
         setTokenId("");
+        setShowModal(false);
     };
 
     const handleCreateAuction = async (nftAddress, nftTokenId) => {

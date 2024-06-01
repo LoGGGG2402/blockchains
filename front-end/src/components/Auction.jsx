@@ -315,6 +315,15 @@ function Auction({ auctionContract, auctionId, signer }) {
                                 )}
                             </div>
                         )}
+                        {isWinner && ended && (
+                            <button
+                                className="mt-2 w-full bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded transition duration-300"
+                                onClick={() => claimNFT(nftId, nftContract)}
+                            >
+                                Claim NFT
+                            </button>
+                        )
+                        }
                     </div>
                 </div>
             )}
