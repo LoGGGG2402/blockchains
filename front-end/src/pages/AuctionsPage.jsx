@@ -55,8 +55,8 @@ function OnGoingAuctionsPage({ signer }) {
 
                 for (let i = 1; i < auctionsTokens_count; i++) {
                     auctionsTokens.push({
-                            auctionContract: NFTAuctionTokenContract,
-                            auctionId: i
+                        auctionContract: NFTAuctionTokenContract,
+                        auctionId: i
                     });
                 }
 
@@ -71,30 +71,36 @@ function OnGoingAuctionsPage({ signer }) {
     }, [signer]);
 
     return (
-        <>
-            <h1>On Going Auctions</h1>
-            <div>
+        <div className="container mx-auto p-4">
+            <h1 className="text-3xl font-extrabold mb-6 text-center text-gray-800 border-b-2 border-gray-500 pb-2">
+                On Going Auctions
+            </h1>
+            <div className="flex flex-wrap -mx-2">
                 {auctions.map((auction, index) => (
-                    <Auction
-                        key={index}
-                        auctionContract={auction.auctionContract}
-                        auctionId={auction.auctionId}
-                        signer={signer}
-                    />
+                    <div key={index}>
+                        <Auction
+                            auctionContract={auction.auctionContract}
+                            auctionId={auction.auctionId}
+                            signer={signer}
+                        />
+                    </div>
                 ))}
             </div>
-            <h1>On Going Auctions Tokens</h1>
-            <div>
+            <h1 className="text-3xl font-extrabold mb-6 text-center text-gray-800 border-b-2 border-gray-500 pb-2">
+                On Going Auctions Tokens
+            </h1>
+            <div className="flex flex-wrap -mx-2">
                 {auctionsTokens.map((auctionToken, index) => (
-                    <Auction
-                        key={index}
-                        auctionContract={auctionToken.auctionContract}
-                        auctionId={auctionToken.auctionId}
-                        signer={signer}
-                    />
+                    <div key={index}>
+                        <Auction
+                            auctionContract={auctionToken.auctionContract}
+                            auctionId={auctionToken.auctionId}
+                            signer={signer}
+                        />
+                    </div>
                 ))}
             </div>
-        </>
+        </div>
     );
 }
 
