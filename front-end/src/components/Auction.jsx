@@ -249,7 +249,7 @@ function Auction({ auctionContract, auctionId, signer }) {
                                 Withdraw
                             </button>
                         )}
-                        {signer._address === auctioneer && (
+                        {signer._address === auctioneer && !ended && (
                             <div>
                                 <button
                                     className="mt-2 w-full bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded transition duration-300"
@@ -257,7 +257,8 @@ function Auction({ auctionContract, auctionId, signer }) {
                                 >
                                     End Auction
                                 </button>
-                                {!ended && (
+                                { endTime - Math.floor(Date.now() / 1000) > 60
+                                    && (
                                 <button
                                     className="mt-2 w-full bg-blue-500 hover:bg-gray-700 text-white font-bold py-1 px-2 rounded transition duration-300"
                                     onClick={cancelAuction}

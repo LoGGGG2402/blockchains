@@ -15,7 +15,6 @@ contract NFTAuction is IERC721Receiver, ReentrancyGuard {
 
     uint256 public constant EXTENSION_DURATION = 10 minutes; // if bid in last 10 mins
     uint256 public constant AUCTION_SERVICE_FEE_RATE = 3; // Percentage
-    uint256 public constant MINIMUM_BID_RATE = 110; // Percentage
 
     struct Auction {
         address auctioneer;
@@ -46,6 +45,9 @@ contract NFTAuction is IERC721Receiver, ReentrancyGuard {
     event AuctionCancelled(uint256 auctionId);
     event BidCancelled(uint256 auctionId, address bidder);
 
+    event OrganizerChanged(address organizer);
+    event ServiceFeeRateChanged(uint256 rate);
+
     constructor() {
         _organizer = msg.sender;
         _auctionIdCounter = 1;
@@ -58,6 +60,36 @@ contract NFTAuction is IERC721Receiver, ReentrancyGuard {
         );
         _;
     }
+
+    modifier onlyOrganizer() {
+        require(
+            _organizer == msg.sender,
+            "NFTAuction: Only the organizer can call this function"
+        );
+        _;
+    }
+
+    function setOrganizer(address organizer) public onlyOrganizer {
+        require(
+            organizer != address(0),
+            "NFTAuction: Invalid organizer address"
+        );
+        _organizer = organizer;
+
+        emit OrganizerChanged(organizer);
+    }
+
+    function setServiceFeeRate(uint256 rate) public onlyOrganizer {
+        require(
+            rate >= 0 && rate <= 100,
+            "NFTAuction: Invalid service fee rate"
+        );
+        AUCTION_SERVICE_FEE_RATE = rate;
+
+        emit ServiceFeeRateChanged(rate);
+    }
+
+
 
     function createAuction(
         address nftContract,
@@ -221,32 +253,6 @@ contract NFTAuction is IERC721Receiver, ReentrancyGuard {
         );
 
         emit AuctionEnded(auctionId, auction.winner, auction.winnerBid);
-    }
-
-    function cancelAuction(uint256 auctionId)
-        public
-        nonReentrant
-        onlyOwner(auctionId)
-    {
-        Auction storage auction = _auctions[auctionId];
-        require(
-            block.timestamp < auction.endTime,
-            "NFTAuction: Auction has ended"
-        );
-
-        auction.ended = true;
-
-        if (auction.highestBid != 0) {
-            payable(auction.winner).transfer(auction.highestBid);
-        }
-
-        auction.nftContract.safeTransferFrom(
-            address(this),
-            auction.auctioneer,
-            auction.nftId
-        );
-
-        emit AuctionCancelled(auctionId);
     }
 
     function withdrawBid(uint256 auctionId) public nonReentrant {
