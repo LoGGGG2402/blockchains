@@ -96,7 +96,7 @@ contract NFTMarket is IERC721Receiver, ReentrancyGuard {
         return products[_productId];
     }
 
-    function getAllListedProducts() external view returns (Product[] memory) {
+    function getAllListedProducts() external view returns (uint256[] memory) {
         uint256 productCount = nextProductId;
         uint256 listedProductCount = 0;
 
@@ -108,16 +108,16 @@ contract NFTMarket is IERC721Receiver, ReentrancyGuard {
 
         // If no listed products, return empty array
         if (listedProductCount == 0) {
-            return new Product[](0);
+            return new uint256[](0);
         }
 
-        Product[] memory listedProducts = new Product[](listedProductCount);
+        uint256[] memory listedProducts = new uint256[](listedProductCount);
         uint256 index = 0;
 
         // Populate listedProducts array
         for (uint256 i = 1; i < productCount; i++) {
             if (products[i].isListed) {
-                listedProducts[index] = products[i];
+                listedProducts[index] = i;
                 index++;
             }
         }
