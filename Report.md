@@ -389,4 +389,139 @@ function withdrawBid(uint256 auctionId) public nonReentrant {
     -   The user must not be the highest bidder during an ongoing auction.
     -   If the auction has ended, the user can withdraw their bid if they are not the winner.
 -   **Actions**: Refunds the user's bid amount.
+---
+### 3. Enhanced NFT Auction Contract
+Source: `NFTAuctionToken.sol`
+This smart contract enhances the traditional second price auction mechanism for NFTs by allowing bids with ERC20 tokens. The contract includes several features to ensure a secure, transparent, and efficient auction process.
+#### 3.1. Auction Contract Overview
+**Auction Struct**: 
+```solidity
+struct Auction {
+    address auctioneer;            // Address of the auctioneer who created the auction
+    IERC721 nftContract;           // NFT contract address
+    uint256 nftId;                 // NFT ID
+    IERC20 tokenPayment;           // ERC20 token contract for payment
+    uint256 initialPrice;          // Initial price set for the auction
+    uint256 endTime;               // End time of the auction
+    bool ended;                    // Flag to indicate if the auction has ended
+    uint256 highestBid;            // Highest bid received during the auction
+    address winner;                // Address of the highest bidder (winner)
+    uint256 winnerBid;             // The winning bid amount (second highest bid)
+}
+```
+---
+**Events:**
+-   **AuctionCreated**: Emitted when a new auction is created.
+    -   Parameters: `auctionId`, `nftContract`, `nftId`, `tokenPayment`, `initialPrice`, `endTime`.
+-   **BidPlaced**: Emitted when a new bid is placed.
+    -   Parameters: `auctionId`, `bidder`.
+-   **WinnerBid**: Emitted when the highest bid is updated.
+    -   Parameters: `auctionId`, `winnerBid`.
+-   **AuctionEnded**: Emitted when an auction ends.
+    -   Parameters: `auctionId`, `winner`, `winningBid`.
+-   **AuctionExtended**: Emitted when the auction end time is extended due to a late bid.
+    -   Parameters: `auctionId`, `newEndTime`.
+-   **AuctionCancelled**: Emitted when an auction is cancelled.
+    -   Parameters: `auctionId`.
+-   **BidCancelled**: Emitted when a bid is cancelled.
+    -   Parameters: `auctionId`, `bidder`.
+-   **OrganizerChanged**: Emitted when the organizer address is changed.
+    -   Parameters: `organizer`.
+-   **ServiceFeeRateChanged**: Emitted when the service fee rate is changed.
+    -   Parameters: `rate`.
+---
+**Mappings and Variables:**
 
+-   **Mappings**:
+    -   `mapping(uint256 => Auction) private _auctions`: Stores auction details by auction ID.
+    -   `mapping(uint256 => mapping(address => uint256)) private _bids`: Stores bids for each auction by bidder address.
+-   **Variables**:
+    -   `uint256 public _auctionIdCounter`: Counter for generating unique auction IDs.
+    -   `address public _organizer`: Address of the contract organizer.
+    -   `uint256 public AUCTION_SERVICE_FEE_RATE`: Percentage of the winning bid taken as a service fee.
+    -   `uint256 public constant EXTENSION_DURATION`: Duration by which the auction is extended if a bid is placed in the last 10 minutes.
+---
+**Features:**
+-   **Auction Creation**:
+    
+    -   **Function**: `createAuction`
+    -   **Description**: The auctioneer initiates an auction by specifying the NFT contract address, NFT ID, ERC20 token for payment, initial price, and auction duration. The NFT is transferred to the contract until the auction ends.
+    -   **Parameters**:
+        -   `nftContract`: Address of the ERC721 NFT contract.
+        -   `nftId`: ID of the NFT to be auctioned.
+        -   `tokenPayment`: Address of the ERC20 token used for payment.
+        -   `initialPrice`: Minimum starting price for bids.
+        -   `duration`: Duration of the auction in seconds.
+    -   **Conditions**:
+        -   The auctioneer must own the NFT.
+        -   Valid addresses for the NFT and ERC20 token contracts.
+        -   Initial price must be greater than zero.
+        -   Auction duration must be between 1 second and 30 days.
+-   **Bid Placement**:
+    
+    -   **Function**: `placeBid`
+    -   **Description**: Users place bids on ongoing auctions by specifying the auction ID and bid amount. The bid is recorded along with the bidder's address.
+    -   **Parameters**:
+        -   `auctionId`: ID of the auction to bid on.
+        -   `bidAmount`: Amount of the bid in the specified ERC20 token.
+    -   **Conditions**:
+        -   Bids must be greater than zero and at least the initial price.
+        -   Bids must exceed the current highest bid.
+        -   Bids within the last 10 minutes of the auction extend the duration by 10 minutes.
+-   **Bid Withdrawal**:
+    
+    -   **Function**: `withdrawBid`
+    -   **Description**: Allows users to withdraw their bids after the auction ends if they are not the highest bidder.
+    -   **Parameters**:
+        -   `auctionId`: ID of the auction to withdraw the bid from.
+    -   **Conditions**:
+        -   The auction must be concluded.
+        -   The caller must not be the highest bidder.
+        -   There must be a bid to withdraw.
+-   **Auction End**:
+    
+    -   **Function**: `endAuction`
+    -   **Description**: Ends the auction, transfers the NFT to the highest bidder, and processes payments and fees.
+    -   **Parameters**:
+        -   `auctionId`: ID of the auction to end.
+    -   **Conditions**:
+        -   The auction duration must have elapsed.
+        -   The auction must not have been previously ended.
+    -   **Process**:
+        -   Calculates and transfers service fees to the organizer.
+        -   Transfers the remaining bid amount to the auctioneer.
+        -   Refunds any excess amount to the highest bidder.
+        -   Transfers the NFT to the highest bidder.
+-   **Service Fees**:
+    
+    -   **Description**: Configurable service fee deducted from the winning bid amount and transferred to the contract organizer.
+    -   **Functions**:
+        -   `setServiceFeeRate`: Sets the service fee rate.
+        -   `setOrganizer`: Sets a new organizer address.
+    -   **Parameters**:
+        -   `rate`: Percentage of the winning bid taken as a service fee.
+        -   `organizer`: New organizer address.
+-   **Auction Management**:
+    
+    -   **Functions**:
+        -   `getAuctionDetails`: Retrieves details of a specific auction.
+        -   `getBidPrice`: Retrieves the bid amount for a specific auction by the caller.
+        -   `isWinner`: Checks if the caller is the winner of a specific auction.
+        -   `getOngoingAuctions`: Retrieves a list of ongoing auction IDs.
+---
+**Functions:**
+
+- **createAuction**: Initiates a new auction by transferring the NFT to the contract and defining auction parameters.
+-  **placeBid**: Allows users to bid on ongoing auctions, updating the highest bid and bidder.
+-  **cancelBid**: Allows users to cancel their bids if they are not the highest bidder.
+-  **endAuction**: Ends an auction, transfers the NFT to the winner, and handles the payments.
+-  **withdrawBid**: Allows users to withdraw their bid amounts after the auction has ended, if they are not the winner.
+-  **setOrganizer**: Sets a new organizer address.
+-  **setServiceFeeRate**: Sets a new service fee rate.
+-  **getAuctionDetails**: Retrieves details of a specific auction.
+-  **getBidPrice**: Retrieves the bid amount for a specific auction by the caller.
+-  **isWinner**: Checks if the caller is the winner of a specific auction.
+-  **getOngoingAuctions**: Retrieves a list of ongoing auction IDs.
+
+---
+## III. Deployment
