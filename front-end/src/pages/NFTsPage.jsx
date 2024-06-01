@@ -209,7 +209,7 @@ function NFTsPage({ signer }) {
                     formValues.duration,
                 );
                 let nftsStorage = JSON.parse(localStorage.getItem("nfts")) || [];
-                nftsStorage = nftsStorage.filter(nft => nft.tokenId !== nftTokenId);
+                nftsStorage = nftsStorage.filter(nft => nft.tokenId !== nftTokenId && nft.address !== nftAddress);
                 localStorage.setItem("nfts", JSON.stringify(nftsStorage));
                 setNfts(nfts.filter(nft => nft.tokenId !== nftTokenId));
                 await Sweet.fire("Auction created successfully!", "", "success");

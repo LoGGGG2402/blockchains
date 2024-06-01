@@ -11,6 +11,7 @@ function Auction({ auctionContract, auctionId, signer }) {
     const [winnerBid, setWinnerBid] = useState("");
     const [myBid, setMyBid] = useState(null);
     const [symbol, setSymbol] = useState("");
+    const [isWinner, setIsWinner] = useState(false);
 
     const [paymentContract, setPaymentContract] = useState(null);
 
@@ -57,6 +58,11 @@ function Auction({ auctionContract, auctionId, signer }) {
                     if (myBid.gt(0))
                     {
                         setMyBid(ethers.utils.formatEther(myBid));
+                    }
+                    const winner = await auctionContract.connect(signer).isWinner(auctionId);
+                    if (winner)
+                    {
+                        setIsWinner(true);
                     }
                 }
 
@@ -191,6 +197,44 @@ function Auction({ auctionContract, auctionId, signer }) {
                 title: "Failed to end auction.",
             });
         }
+    }
+    const claimNFT = async (tokenId, address) => {
+        let nfts = localStorage.getItem("nfts") ? JSON.parse(localStorage.getItem("nfts")) : [];
+        // check if nft is already claimed by nftId and address
+        if (nfts.find(nft => nft.tokenId === tokenId && nft.address === address)) {
+            await Sweet.fire({
+                icon: "error",
+                title: "NFT already claimed!",
+            });
+            return;
+        }
+        if (!window.ethereum) {
+            await Sweet.fire("Please install MetaMask!", "", "error");
+            return;
+        }
+        let provider = new ethers.providers.Web3Provider(window.ethereum);
+        let ERC721abi = [
+            "function tokenURI(uint256 tokenId) view returns (string)",
+            "function approve(address to, uint256 tokenId)",
+            "function balanceOf(address owner) view returns (uint256)",
+            "function ownerOf(uint256 tokenId) view returns (address)",
+        ];
+
+        const contract = new ethers.Contract(address, ERC721abi, provider);
+        const uri = await contract.tokenURI(tokenId);
+        const owner = await contract.ownerOf(tokenId);
+        const nft = {
+            tokenId: tokenId,
+            address: address,
+            uri: uri,
+            owner: owner,
+        }
+        nfts.push(nft);
+        localStorage.setItem("nfts", JSON.stringify(nfts));
+        await Sweet.fire({
+            icon: "success",
+            title: "NFT claimed successfully!",
+        });
     }
 
     return (
