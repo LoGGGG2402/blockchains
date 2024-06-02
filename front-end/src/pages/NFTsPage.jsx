@@ -51,7 +51,7 @@ function NFTsPage({signer}) {
         }
 
         fetchData().then();
-    }, []);
+    }, [signer]);
 
     const addNFT = async (address, tokenId) => {
         if (!window.ethereum) {

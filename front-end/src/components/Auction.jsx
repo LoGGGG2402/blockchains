@@ -290,94 +290,94 @@ function Auction({auctionContract, auctionId, signer}) {
     }
 
     return (
-        <>
-        {loading ? (
-            <div className="justify-center items-center flex h-96">
-            <div className="animate-spin rounded-full h-20 w-20 border-t-2 border-b-2 border-gray-900"></div>
-            </div>
-        ) : (
-            <div className={waitingTx ? "blur-sm pointer-events-none" : ""}>
-                <>
-                    <div className="max-w-xs rounded overflow-hidden shadow-md bg-white mx-auto">
-                        <img className="w-full h-48 object-cover" src={nft.image} alt={nft.name} />
-                        <div className="px-4">
-                            <div className="font-bold text-lg mb-1 text-gray-800 text-center">{nft.name}</div>
-                            <p className="text-gray-700 text-sm">Description: {nft.description}</p>
-                        </div>
-                        <div className="px-4 py-3 bg-white rounded-b-lg">
-                            <div className="flex flex-wrap justify-center">
-                                <span className="block rounded-full px-2 py-1 text-xs font-semibold text-green-700 mr-1 mb-1">
-                                    Auctioneer: {auctioneer}
-                                </span>
-                                <span className="block rounded-full px-2 py-1 text-xs font-semibold text-green-700 mr-1 mb-1">
-                                    End Time: {new Date(endTime * 1000).toLocaleString()}
-                                </span>
-                                <span className="block rounded-full px-2 py-1 text-xs font-semibold text-green-700 mr-1 mb-1">
-                                    Ended: {ended ? "Yes" : "No"}
-                                </span>
-                                <span className="block rounded-full px-2 py-1 text-xs font-semibold text-green-700 mr-1 mb-1">
-                                    Winner Bid: {winnerBid} {symbol}
-                                </span>
-                                {myBid && (
+        <div className={"m-4"}>
+            {loading ? (
+                <div className="justify-center items-center flex h-96">
+                <div className="animate-spin rounded-full h-20 w-20 border-t-2 border-b-2 border-gray-900"></div>
+                </div>
+            ) : (
+                <div className={waitingTx ? "blur-sm pointer-events-none" : ""}>
+                    <>
+                        <div className="max-w-xs rounded overflow-hidden shadow-md bg-white mx-auto">
+                            <img className="w-full h-48 object-cover" src={nft.image} alt={nft.name} />
+                            <div className="px-4">
+                                <div className="font-bold text-lg mb-1 text-gray-800 text-center">{nft.name}</div>
+                                <p className="text-gray-700 text-sm">Description: {nft.description}</p>
+                            </div>
+                            <div className="px-4 py-3 bg-white rounded-b-lg">
+                                <div className="flex flex-wrap justify-center">
                                     <span className="block rounded-full px-2 py-1 text-xs font-semibold text-green-700 mr-1 mb-1">
-                                        My Bid: {myBid} {symbol}
+                                        Auctioneer: {auctioneer}
                                     </span>
+                                    <span className="block rounded-full px-2 py-1 text-xs font-semibold text-green-700 mr-1 mb-1">
+                                        End Time: {new Date(endTime * 1000).toLocaleString()}
+                                    </span>
+                                    <span className="block rounded-full px-2 py-1 text-xs font-semibold text-green-700 mr-1 mb-1">
+                                        Ended: {ended ? "Yes" : "No"}
+                                    </span>
+                                    <span className="block rounded-full px-2 py-1 text-xs font-semibold text-green-700 mr-1 mb-1">
+                                        Winner Bid: {winnerBid} {symbol}
+                                    </span>
+                                    {myBid && (
+                                        <span className="block rounded-full px-2 py-1 text-xs font-semibold text-green-700 mr-1 mb-1">
+                                            My Bid: {myBid} {symbol}
+                                        </span>
+                                    )}
+                                </div>
+                                {signer._address !== auctioneer && !ended && endTime - Math.floor(Date.now() / 1000) > 0 &&(
+                                    <div>
+                                        <button
+                                            className="mt-2 w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded transition duration-300"
+                                            onClick={placeBid}
+                                        >
+                                            Place Bid
+                                        </button>
+                                    </div>
+                                )}
+
+                                {signer._address !== auctioneer && !ended && myBid && !isWinner && (
+                                    <div>
+                                        <button
+                                            className="mt-2 w-full bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded transition duration-300"
+                                            onClick={cancelBid}
+                                        >
+                                            Cancel Bid
+                                        </button>
+                                    </div>
+                                    )
+                                }
+                                {signer._address !== auctioneer && ended && !isWinner && myBid && (
+                                    <button
+                                        className="mt-2 w-full bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded transition duration-300"
+                                        onClick={withdraw}
+                                    >
+                                        Withdraw
+                                    </button>
+                                )}
+                                {(signer._address === auctioneer || isWinner) && !ended && Math.floor(Date.now() / 1000) - endTime > 60 && (
+                                    <div>
+                                        <button
+                                            className="mt-2 w-full bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded transition duration-300"
+                                            onClick={endAuction}
+                                        >
+                                            End Auction
+                                        </button>
+                                    </div>
+                                )}
+                                {isWinner && ended && (
+                                    <button
+                                        className="mt-2 w-full bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded transition duration-300"
+                                        onClick={() => claimNFT(nft.tokenId, nft.address)}
+                                    >
+                                        Claim NFT
+                                    </button>
                                 )}
                             </div>
-                            {signer._address !== auctioneer && !ended && endTime - Math.floor(Date.now() / 1000) > 0 &&(
-                                <div>
-                                    <button
-                                        className="mt-2 w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded transition duration-300"
-                                        onClick={placeBid}
-                                    >
-                                        Place Bid
-                                    </button>
-                                </div>
-                            )}
-
-                            {signer._address !== auctioneer && !ended && myBid && !isWinner && (
-                                <div>
-                                    <button
-                                        className="mt-2 w-full bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded transition duration-300"
-                                        onClick={cancelBid}
-                                    >
-                                        Cancel Bid
-                                    </button>
-                                </div>
-                                )
-                            }
-                            {signer._address !== auctioneer && ended && !isWinner && myBid && (
-                                <button
-                                    className="mt-2 w-full bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded transition duration-300"
-                                    onClick={withdraw}
-                                >
-                                    Withdraw
-                                </button>
-                            )}
-                            {(signer._address === auctioneer || isWinner) && !ended && Math.floor(Date.now() / 1000) - endTime > 60 && (
-                                <div>
-                                    <button
-                                        className="mt-2 w-full bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded transition duration-300"
-                                        onClick={endAuction}
-                                    >
-                                        End Auction
-                                    </button>
-                                </div>
-                            )}
-                            {isWinner && ended && (
-                                <button
-                                    className="mt-2 w-full bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded transition duration-300"
-                                    onClick={() => claimNFT(nft.tokenId, nft.address)}
-                                >
-                                    Claim NFT
-                                </button>
-                            )}
                         </div>
-                    </div>
-                </>
-            </div>
-        )}
-    </>
+                    </>
+                </div>
+            )}
+        </div>
     );
 }
 

@@ -22,6 +22,7 @@ function App() {
                 <Route path="/my-nft" element={<NFTsPage signer={signer}/>}/>
                 <Route path="/auction" element={<AuctionsPage signer={signer}/>}/>
                 <Route path="/create-nft" element={<CreateNFTPage signer={signer}/>}/>
+                <Route path="/ongoing-auction" element={<OnGoingAuctionsPage signer={signer}/>}/>
             </Routes>
         </Router>
     )
