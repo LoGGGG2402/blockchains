@@ -535,6 +535,8 @@ struct Auction {
 ---
 ### 4. NFT Marketplace Smart Contract
 Source: `NFTMarket.sol`
+
+The NFTMarket contract is a robust smart contract designed to facilitate the listing, unlisting, and purchasing of NFTs (Non-Fungible Tokens) using either ETH or ERC20 tokens. It leverages the OpenZeppelin library for security and utility functions, ensuring reliable and secure operations. The contract follows the ERC721 standard for NFTs and the ERC20 standard for token payments, making it flexible for a variety of token types.
 #### 4.1. Contract Overview
 **Struct:**
 `Product`: A struct that holds information about each NFT listed on the marketplace.
