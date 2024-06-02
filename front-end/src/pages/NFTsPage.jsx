@@ -42,11 +42,7 @@ function NFTsPage({signer}) {
                 // set nfts that owned by the signer
                 setNfts(nftsData);
             } catch (error) {
-                await Sweet.fire({
-                    icon: "error",
-                    title: "Failed to place bid.",
-                    html: JSON.stringify(error.reason || error.message || error),
-                });
+                console.error(error);
             }
         }
 
@@ -214,6 +210,7 @@ function NFTsPage({signer}) {
                     await approveTx.wait();
                 }
                 const NFTAuctionContract = new ethers.Contract(NFTAuctionToken.address, NFTAuctionToken.abi, signer);
+                console.log("Creating auction...")
                 const createAuctionTx = await NFTAuctionContract.createAuction(
                     nftAddress,
                     nftTokenId,
@@ -232,7 +229,7 @@ function NFTsPage({signer}) {
             } catch (error) {
                 await Sweet.fire({
                     icon: "error",
-                    title: "Failed to place bid.",
+                    title: "Failed to create auction.",
                     html: JSON.stringify(error.reason || error.message || error),
                 });
             }
@@ -308,7 +305,7 @@ function NFTsPage({signer}) {
             } catch (error) {
                 await Sweet.fire({
                     icon: "error",
-                    title: "Failed to place bid.",
+                    title: "Failed to list NFT.",
                     html: JSON.stringify(error.reason || error.message || error),
                 });
             }
@@ -344,7 +341,7 @@ function NFTsPage({signer}) {
         } catch (error) {
             await Sweet.fire({
                 icon: "error",
-                title: "Failed to place bid.",
+                title: "Failed to check ERC20 token.",
                 html: JSON.stringify(error.reason || error.message || error),
             });
             return false;
