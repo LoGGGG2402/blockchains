@@ -1,20 +1,19 @@
-const {hre: HardhatRuntimeEnvironment} = require("hardhat");
 const fs = require("fs");
-const {ethers} = require("hardhat");
+const {ethers, artifacts} = require("hardhat");
 
 async function main() {
-    let [deployer] = await hre.ethers.getSigners()
+    let [deployer] = await ethers.getSigners()
     console.log("Deploying contracts with the account:", deployer.address)
-    const Auction = await hre.ethers.getContractFactory("NFTAuction")
+    const Auction = await ethers.getContractFactory("NFTAuction")
     const auction = await Auction.deploy()
     
-    const AuctionToken = await hre.ethers.getContractFactory("NFTAuctionToken")
+    const AuctionToken = await ethers.getContractFactory("NFTAuctionToken")
     const auctionToken = await AuctionToken.deploy()
     
-    const Token = await hre.ethers.getContractFactory("Token")
+    const Token = await ethers.getContractFactory("Token")
     const token = await Token.deploy(deployer.address)
     
-    const OP_NFT = await hre.ethers.getContractFactory("OnePieceNFT")
+    const OP_NFT = await ethers.getContractFactory("OnePieceNFT")
     const op_nft = await OP_NFT.deploy()
     
     console.log("OnePieceNFT deployed to:", op_nft.target)
@@ -27,7 +26,7 @@ async function main() {
     saveFrontendFiles("NFTAuctionToken", auctionToken.target)
     saveFrontendFiles("Token", token.target)
 
-    const NFTMarket = await hre.ethers.getContractFactory("NFTMarket")
+    const NFTMarket = await ethers.getContractFactory("NFTMarket")
     const nftMarket = await NFTMarket.deploy()
 
     console.log("NFTMarket deployed to:", nftMarket.target)
@@ -36,7 +35,7 @@ async function main() {
 
 // function to save addresses and ABIs to frontend
 function saveFrontendFiles(contractName, address) {
-    const contractsDir = "C:\\Users\\Nitro 5\\Code\\blockchains\\front-end\\src\\assets\\contracts"
+    const contractsDir = "/Users/phanphanhailong/IdeaProjects/blockchains/front-end/src/assets/contracts"
     if (!fs.existsSync(contractsDir)) {
         fs.mkdirSync(contractsDir)
     }
@@ -44,7 +43,7 @@ function saveFrontendFiles(contractName, address) {
         contractsDir + "/" + contractName + ".json",
         JSON.stringify({
             address: address,
-            abi: hre.artifacts.readArtifactSync(contractName).abi,
+            abi: artifacts.readArtifactSync(contractName).abi,
         })
     )
 }
