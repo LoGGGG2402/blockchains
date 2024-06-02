@@ -38,12 +38,16 @@ function createNFTPage({signer}) {
 
                 const contract = new ethers.Contract(OnePieceNFT.address, OnePieceNFT.abi, signer);
 
-                const tokenId = await contract.mint(data.metadata_url);
+                const tx = await contract.mint(data.metadata_url);
+                console.log("tx", tx)
+                const successTx = await tx.wait();
+                const tokenId = successTx.events[1].args._tokenId;
+                console.log("tokenId", tokenId)
 
 
                 // save to local storage
                 const nft = {
-                    tokenId: tokenId.value.toNumber(),
+                    tokenId: tokenId.toNumber(),
                     address: contract.address,
                     uri: data.metadata_url,
                     owner: await signer.getAddress()
