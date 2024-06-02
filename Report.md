@@ -1,7 +1,17 @@
-# Building an NFT Auction Smart Contract
+# Building NFT Auction Smart Contract and NFT marketplace
 ## Prerequisites:
 - Basic understanding of Solidity.
 - Development environment setup with Hardhat
+## Example (Hardhat Project):
+- This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a Hardhat Ignition module that deploys that contract.
+- Try running some of the following tasks:
+	```bash
+	npx hardhat help
+	npx hardhat test
+	REPORT_GAS=true npx hardhat test
+	npx hardhat node
+	npx hardhat run scripts/deploy_local.js
+	```
 
 ## I. Introduction
 Blockchain technology's decentralized framework has unlocked new opportunities for digital assets, particularly through Non-Fungible Tokens (NFTs). NFTs symbolize distinct digital assets, and auctions have emerged as a favored method for their trading. We’ll explore how to build an Ethereum-based NFT auction smart contract, focusing on implementing a `second-price auction` (also known as a Vickrey auction).
@@ -522,6 +532,69 @@ struct Auction {
 -  **getBidPrice**: Retrieves the bid amount for a specific auction by the caller.
 -  **isWinner**: Checks if the caller is the winner of a specific auction.
 -  **getOngoingAuctions**: Retrieves a list of ongoing auction IDs.
+---
+### 4. NFT Marketplace Smart Contract
+Source: `NFTMarket.sol`
+#### 4.1. Contract Overview
+**Struct:**
+`Product`: A struct that holds information about each NFT listed on the marketplace.
 
+-   `owner`: The address of the NFT owner.
+-   `nftContract`: The ERC721 contract of the NFT.
+-   `tokenId`: The ID of the NFT token.
+-   `price`: The listing price of the NFT.
+-   `tokenPayment`: The address of the ERC20 token for payment (or address(0) for ETH).
+-   `isListed`: A boolean indicating if the product is currently listed.
+---
+**Events:**
+-   `ProductListed`: Emitted when an NFT is listed on the marketplace.
+-   `ProductSold`: Emitted when an NFT is sold.
+-   `ProductUnlisted`: Emitted when an NFT is unlisted from the marketplace.
+---
+**Variables:**
+-   `nextProductId`: A counter to generate unique product IDs for each listed NFT.
+-   `products`: A mapping to store details of each listed product using the product ID as the key.
+---
+**Features:**
+- **Listing Products:**
+	- **Function Name:** `listProduct`
+	- **Description:** Users can list their NFTs for sale by specifying the NFT contract, token ID, sale price, and payment token (either ETH or an ERC20 token).
+	-   **Parameters**:
+    -   `address _nftContract`: The address of the NFT contract.
+    -   `uint256 _tokenId`: The ID of the NFT to be listed.
+    -   `uint256 _price`: The listing price of the NFT.
+    -   `address _tokenPayment`: The address of the ERC20 token contract for payment (use address(0) for ETH).
+	-   **Returns**: None.
+	-   **Requirements**:
+	    -   The NFT contract address must be valid and support the ERC721 interface.
+	    -   The caller must own the NFT and have approved the contract to transfer it.
+	    -   The listing price must be greater than zero.
+	    -   The ERC20 token payment address, if provided, must be valid and support the ERC20 interface.
+	-   **Emits**:
+	    -   `ProductListed` event with details of the listed product.
+---
+- **Unlisting Products:**
+	- **Function Name:** `unlistProduct`
+	- **Description:** Owners can unlist their NFTs from the marketplace, transferring the NFT back to their ownership.
+	-   **Parameters**:
+	    -   `uint256 _productId`: The ID of the product to be unlisted.
+	-   **Returns**: None.
+	-   **Requirements**:
+	    -   The caller must be the owner of the product.
+	    -   The product must be currently listed.
+	-   **Emits**:
+	    -   `ProductUnlisted` event with the product ID.
+---
+- **Buying Products:**
+	- **Function Name:** `buyProduct`
+	- **Description:** Buyers can purchase listed NFTs by sending the required payment in either ETH or the specified ERC20 token.
+	-   **Parameters**:
+	    -   `uint256 _productId`: The ID of the product to be bought.
+	-   **Returns**: None.
+	-   **Requirements**:
+	    -   The product must be currently listed.
+	    -   The caller must send the correct amount of ETH or have enough ERC20 tokens approved for the transaction.
+	-   **Emits**:
+	    -   `ProductSold` event with the product ID and buyer's address.
 ---
 ## III. Deployment
