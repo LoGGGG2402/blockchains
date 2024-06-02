@@ -40,7 +40,11 @@ function MarketPage({signer}) {
                 const productsId = await MarketContract.getAllListedProducts();
                 setProductsId(productsId);
             } catch (error) {
-                console.error("Error fetching products:", error);
+                await Sweet.fire({
+                    icon: "error",
+                    title: "Error fetching products!",
+                    html: error.message || error
+                });
             }
         };
 

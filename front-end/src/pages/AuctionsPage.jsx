@@ -35,7 +35,11 @@ function OnGoingAuctionsPage({signer}) {
                     provider
                 );
             } catch (error) {
-                console.error("Error creating contract instances:", error);
+                await Sweet.fire({
+                    icon: "error",
+                    title: "Error creating contract instances!",
+                    html: error.message || error
+                });
                 return;
             }
 
@@ -63,7 +67,11 @@ function OnGoingAuctionsPage({signer}) {
                 setAuctions(auctions);
                 setAuctionsTokens(auctionsTokens);
             } catch (error) {
-                console.error("Error fetching auctions:", error);
+                await Sweet.fire({
+                    icon: "error",
+                    title: "Error fetching auctions!",
+                    html: error.message || error
+                });
             }
         };
 

@@ -77,14 +77,12 @@ function Product({marketContract, productId, signer}) {
                 } else {
                     setPrice(ethers.utils.formatEther(price));
                 }
-                console.log(nft)
             } catch (error) {
-                console.log("Error fetching product:", error);
-                // await Sweet.fire({
-                //     icon: "error",
-                //     title: "Error fetching product!",
-                //     html: JSON.stringify(error.reason || error.message || error),
-                // });
+                await Sweet.fire({
+                    icon: "error",
+                    title: "Error fetching product!",
+                    html: JSON.stringify(error.reason || error.message || error),
+                });
             } finally {
                 setLoading(false);
             }

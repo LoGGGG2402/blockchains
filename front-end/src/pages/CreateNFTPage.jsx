@@ -30,20 +30,16 @@ function createNFTPage({signer}) {
                 }
             });
 
-            console.log(response)
 
 
             const data = await response.data
 
             if (response.status === 200 && data.message === "Metadata added successfully.") {
-                console.log("Metadata added successfully!");
 
                 const contract = new ethers.Contract(OnePieceNFT.address, OnePieceNFT.abi, signer);
-                console.log("Contract:", contract);
 
                 const tokenId = await contract.mint(data.metadata_url);
 
-                console.log("Token ID:", tokenId.value.toNumber());
 
                 // save to local storage
                 const nft = {
@@ -56,7 +52,6 @@ function createNFTPage({signer}) {
                 let nfts = JSON.parse(localStorage.getItem("nfts")) || [];
                 nfts.push(nft);
                 localStorage.setItem("nfts", JSON.stringify(nfts));
-                console.log("NFT created successfully!");
                 navigate('/my-nft');
             } else {
                 await Sweet.fire({

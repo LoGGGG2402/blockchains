@@ -42,7 +42,11 @@ function NFTsPage({signer}) {
                 // set nfts that owned by the signer
                 setNfts(nftsData);
             } catch (error) {
-                console.error(error);
+                await Sweet.fire({
+                    icon: "error",
+                    title: "Error fetching NFTs!",
+                    html: error.message || error
+                })
             }
         }
 
@@ -210,7 +214,6 @@ function NFTsPage({signer}) {
                     await approveTx.wait();
                 }
                 const NFTAuctionContract = new ethers.Contract(NFTAuctionToken.address, NFTAuctionToken.abi, signer);
-                console.log("Creating auction...")
                 const createAuctionTx = await NFTAuctionContract.createAuction(
                     nftAddress,
                     nftTokenId,
