@@ -23,8 +23,11 @@ function NFTsPage({signer}) {
     useEffect(() => {
         async function fetchData() {
             const nftsStorage = JSON.parse(localStorage.getItem("nfts")) || [];
+
             try {
-                const promises = nftsStorage.map(async (nft) => {
+
+                const promises = nftsStorage.filter(nft => nft.owner === signer._address)
+                    .map(async (nft) => {
                     const response = await axios.get(nft.uri);
                     return {
                         address: nft.address,
@@ -37,7 +40,6 @@ function NFTsPage({signer}) {
                 });
                 const nftsData = await Promise.all(promises);
                 // set nfts that owned by the signer
-                nftsData.filter(nft => nft.owner === signer._address);
                 setNfts(nftsData);
             } catch (error) {
                 await Sweet.fire({
@@ -231,7 +233,6 @@ function NFTsPage({signer}) {
                     html: JSON.stringify(error.reason || error.message || error),
                 });
             }
-
         }
     }
 
@@ -313,7 +314,6 @@ function NFTsPage({signer}) {
         setModalType("options");
         setChosenNFT(nft);
     };
-
 
     const checkIfERC20 = async (address) => {
         if (!window.ethereum) {

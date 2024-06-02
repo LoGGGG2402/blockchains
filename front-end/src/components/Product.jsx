@@ -6,9 +6,10 @@ import axios from "axios";
 function Product({marketContract, productId, signer}) {
     const [owner, setOwner] = useState("");
     const [nft, setNft] = useState({});
+    const [isListed, setIsListed] = useState(false);
 
     const [price, setPrice] = useState("");
-    const [symbol, setSymbol] = useState("");
+    const [symbol, setSymbol] = useState("ETH");
     const [decimals, setDecimals] = useState(18);
 
     const [paymentContract, setPaymentContract] = useState(null);
@@ -28,9 +29,8 @@ function Product({marketContract, productId, signer}) {
             try {
                 const provider = new ethers.providers.Web3Provider(window.ethereum);
                 const product = await marketContract.getProduct(productId);
-                const {owner, nftContract, tokenId, price, tokenPayment} = product;
-                console.log(product);
-
+                const {owner, nftContract, tokenId, price, tokenPayment, isListed} = product;
+                setIsListed(isListed);
                 setOwner(owner);
 
                 const ERC721abi = [
@@ -50,11 +50,12 @@ function Product({marketContract, productId, signer}) {
                     name: response.data.name,
                     description: response.data.description,
                     image: response.data.image,
+                    uri: uri,
                 };
 
                 setNft(nft);
 
-                if (tokenPayment) {
+                if (tokenPayment !== ethers.constants.AddressZero) {
                     const ERC20abi = [
                         "function balanceOf(address owner) view returns (uint256)",
                         "function transfer(address to, uint256 value) returns (bool)",
@@ -70,9 +71,10 @@ function Product({marketContract, productId, signer}) {
                     setDecimals(paymentDecimals);
                     setPaymentContract(paymentContract);
                     setPrice(ethers.utils.formatUnits(price, paymentDecimals));
+                } else {
+                    setPrice(ethers.utils.formatEther(price));
                 }
-
-
+                console.log(nft)
             } catch (error) {
                 console.log("Error fetching product:", error);
                 // await Sweet.fire({
@@ -80,6 +82,8 @@ function Product({marketContract, productId, signer}) {
                 //     title: "Error fetching product!",
                 //     html: JSON.stringify(error.reason || error.message || error),
                 // });
+            } finally {
+                setLoading(false);
             }
         };
 
@@ -112,6 +116,15 @@ function Product({marketContract, productId, signer}) {
             }
             if (tx) {
                 await tx.wait();
+
+                let nfts = localStorage.getItem("nfts") ? JSON.parse(localStorage.getItem("nfts")) : [];
+                nfts.push({
+                    tokenId: nft.tokenId,
+                    address: nft.address,
+                    uri: nft.uri,
+                    owner: signer._address
+                });
+                localStorage.setItem("nfts", JSON.stringify(nfts));
                 await Sweet.fire({
                     icon: "success",
                     title: "Product bought successfully!"
@@ -140,6 +153,15 @@ function Product({marketContract, productId, signer}) {
         try {
             const tx = await contractWithSigner.unListProduct(productId);
             await tx.wait();
+
+            let nfts = localStorage.getItem("nfts") ? JSON.parse(localStorage.getItem("nfts")) : [];
+            nfts.push({
+                tokenId: nft.tokenId,
+                address: nft.address,
+                uri: nft.uri,
+                owner: signer._address
+            });
+            localStorage.setItem("nfts", JSON.stringify(nfts));
             await Sweet.fire({
                 icon: "success",
                 title: "Product unlisted successfully!"
@@ -157,47 +179,63 @@ function Product({marketContract, productId, signer}) {
         <>
             {loading ? (
                 <div className="flex  items-center h-screen">
-                    <div className="loader"></div>
+                    <div className="loader">
+                        Loading...
+                    </div>
                 </div>
             ) : (
-                <div className="max-w-xs rounded overflow-hidden shadow-md bg-white mx-auto">
-                    <img className="w-full h-48 object-cover" src={nft.image} alt={nft.name}/>
-                    <div className="px-4 ">
-                        <div className="font-bold text-lg mb-1 text-gray-800 text-center">{nft.name}</div>
-                        <p className="text-gray-700 text-sm ">Description: {nft.description}</p>
-                    </div>
-                    <div className="px-4 py-3 bg-white rounded-b-lg">
-                        <div className="flex flex-wrap justify-center">
-                            <span
-                                className="block  rounded-full px-2 py-1 text-xs font-semibold text-green-700 mr-1 mb-1">
-                                Owner: {owner}
-                            </span>
-                            <span
-                                className="block  rounded-full px-2 py-1 text-xs font-semibold text-green-700 mr-1 mb-1">
-                                Price: {price} {symbol}
-                            </span>
+                <>
+                    <div className="max-w-xs rounded overflow-hidden shadow-md bg-white mx-auto">
+                        <img className="w-full h-48 object-cover" src={nft.image} alt={nft.name}/>
+                        <div className="px-4 ">
+                            <div className="font-bold text-lg mb-1 text-gray-800 text-center">{nft.name}</div>
+                            <p className="text-gray-700 text-sm ">Description: {nft.description}</p>
                         </div>
-                        {owner === signer._address ?
-                            (
-                                <button
-                                    className="mt-2 w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded transition duration-300"
-                                    onClick={unListProduct}
-                                >
-                                    Unlist Product
-                                </button>
-                            )
-                            :
-                            (
-                                <button
-                                    className="mt-2 w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded transition duration-300"
-                                    onClick={buyProduct}
-                                >
-                                    Buy Product
-                                </button>
-                            )
-                        }
+                        <div className="px-4 py-3 bg-white rounded-b-lg">
+                            <div className="flex flex-wrap justify-center">
+                                <span
+                                    className="block  rounded-full px-2 py-1 text-xs font-semibold text-green-700 mr-1 mb-1">
+                                    Owner: {owner}
+                                </span>
+                                <span
+                                    className="block  rounded-full px-2 py-1 text-xs font-semibold text-green-700 mr-1 mb-1">
+                                    Price: {price} {symbol}
+                                </span>
+                            </div>
+
+                            {
+                                isListed ? (
+                                    <>
+                                        {owner === signer._address ?
+                                            (
+                                                <button
+                                                    className="mt-2 w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded transition duration-300"
+                                                    onClick={unListProduct}
+                                                >
+                                                    Unlist Product
+                                                </button>
+                                            )
+                                            :
+                                            (
+                                                <button
+                                                    className="mt-2 w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded transition duration-300"
+                                                    onClick={buyProduct}
+                                                >
+                                                    Buy Product
+                                                </button>
+                                            )
+                                        }
+                                    </>
+                                ) : (
+                                    <span
+                                        className="block  rounded-full px-2 py-1 text-xs font-semibold text-green-700 mr-1 mb-1">
+                                        Status: Unlisted
+                                    </span>
+                                )
+                            }
+                        </div>
                     </div>
-                </div>
+                </>
             )
             }
         </>
