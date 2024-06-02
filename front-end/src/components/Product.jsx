@@ -17,6 +17,8 @@ function Product({marketContract, productId, signer}) {
     const [loading, setLoading] = useState(true);
     const [waitingTx, setWaitingTx] = useState(false);
 
+    const [success, setSuccess] = useState(false);
+
     useEffect(() => {
         const fetchProduct = async () => {
             setLoading(true);
@@ -89,7 +91,7 @@ function Product({marketContract, productId, signer}) {
         };
 
         fetchProduct().then();
-    }, [marketContract, productId, signer]);
+    }, [marketContract, productId, signer, success]);
 
     const buyProduct = async () => {
         if (!window.ethereum) {
@@ -117,7 +119,7 @@ function Product({marketContract, productId, signer}) {
             }
             if (tx) {
                 await tx.wait();
-
+                setSuccess(true);
                 let nfts = localStorage.getItem("nfts") ? JSON.parse(localStorage.getItem("nfts")) : [];
                 nfts.push({
                     tokenId: nft.tokenId,
@@ -155,7 +157,7 @@ function Product({marketContract, productId, signer}) {
         try {
             const tx = await contractWithSigner.unListProduct(productId);
             await tx.wait();
-
+            setSuccess(true)
             let nfts = localStorage.getItem("nfts") ? JSON.parse(localStorage.getItem("nfts")) : [];
             nfts.push({
                 tokenId: nft.tokenId,

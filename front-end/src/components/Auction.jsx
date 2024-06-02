@@ -18,6 +18,8 @@ function Auction({auctionContract, auctionId, signer}) {
     const [loading, setLoading] = useState(false);
     const [waitingTx, setWaitingTx] = useState(false);
 
+    const [success, setSuccess] = useState(false);
+
     useEffect(() => {
         const fetchAuctionDetails = async () => {
             setLoading(true);
@@ -102,7 +104,7 @@ function Auction({auctionContract, auctionId, signer}) {
         };
 
         fetchAuctionDetails().then()
-    }, [auctionContract, auctionId, signer]);
+    }, [auctionContract, auctionId, signer, success]);
 
     const placeBid = async () => {
         if (!window.ethereum) {
@@ -139,11 +141,11 @@ function Auction({auctionContract, auctionId, signer}) {
             }
             if (tx) {
                 await tx.wait();
+                setSuccess(!success);
                 await Sweet.fire({
                     icon: "success",
                     title: "Bid placed successfully!",
                 });
-
             }
         } catch (error) {
             await Sweet.fire({
@@ -167,6 +169,7 @@ function Auction({auctionContract, auctionId, signer}) {
         try {
             const tx = await auctionContract.connect(signer).cancelBid(auctionId);
             await tx.wait();
+            setSuccess(!success)
             await Sweet.fire({
                 icon: "success",
                 title: "Bid cancelled successfully!",
@@ -194,6 +197,7 @@ function Auction({auctionContract, auctionId, signer}) {
         try {
             const tx = await auctionContract.connect(signer).withdrawBid(auctionId);
             await tx.wait();
+            setSuccess(!success)
             await Sweet.fire({
                 icon: "success",
                 title: "Withdrawn successfully!",
@@ -206,7 +210,6 @@ function Auction({auctionContract, auctionId, signer}) {
             });
         } finally {
             setWaitingTx(false);
-
         }
     }
     const endAuction = async () => {
@@ -221,6 +224,7 @@ function Auction({auctionContract, auctionId, signer}) {
         try {
             const tx = await auctionContract.connect(signer).endAuction(auctionId);
             await tx.wait();
+            setSuccess(!success)
             await Sweet.fire({
                 icon: "success",
                 title: "Auction ended successfully!",
