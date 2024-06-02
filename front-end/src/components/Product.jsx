@@ -153,53 +153,53 @@ function Product({ marketContract, productId, signer }) {
         }
     }
 
-  return (
-    <>
-        {loading ? (
-            <div className="flex  items-center h-screen">
-                <div className="loader"></div>
-            </div>
-        ) : (
-            <div className="max-w-xs rounded overflow-hidden shadow-md bg-white mx-auto">
-                <img className="w-full h-48 object-cover" src={nft.image} alt={nft.name}/>
-                <div className="px-4 ">
-                    <div className="font-bold text-lg mb-1 text-gray-800 text-center">{nft.name}</div>
-                    <p className="text-gray-700 text-sm ">Description: {nft.description}</p>
+    return (
+        <>
+            {loading ? (
+                <div className="flex  items-center h-screen">
+                    <div className="loader"></div>
                 </div>
-                <div className="px-4 py-3 bg-white rounded-b-lg">
-                    <div className="flex flex-wrap justify-center">
-                        <span
-                            className="block  rounded-full px-2 py-1 text-xs font-semibold text-green-700 mr-1 mb-1">
-                            Owner: {owner}
-                        </span>
-                        <span className="block  rounded-full px-2 py-1 text-xs font-semibold text-green-700 mr-1 mb-1">
-                            Price: {price} {symbol}
-                        </span>
+            ) : (
+                <div className="max-w-xs rounded overflow-hidden shadow-md bg-white mx-auto">
+                    <img className="w-full h-48 object-cover" src={nft.image} alt={nft.name}/>
+                    <div className="px-4 ">
+                        <div className="font-bold text-lg mb-1 text-gray-800 text-center">{nft.name}</div>
+                        <p className="text-gray-700 text-sm ">Description: {nft.description}</p>
                     </div>
-                    {owner === signer._address ?
-                        (
-                            <button
-                                className="mt-2 w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded transition duration-300"
-                                onClick={unListProduct}
-                            >
-                                Unlist Product
-                            </button>
-                        )
-                        :
-                        (
-                            <button
-                                className="mt-2 w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded transition duration-300"
-                                onClick={buyProduct}
-                            >
-                                Buy Product
-                            </button>
-                        )
-                    }
+                    <div className="px-4 py-3 bg-white rounded-b-lg">
+                        <div className="flex flex-wrap justify-center">
+                            <span
+                                className="block  rounded-full px-2 py-1 text-xs font-semibold text-green-700 mr-1 mb-1">
+                                Owner: {owner}
+                            </span>
+                            <span className="block  rounded-full px-2 py-1 text-xs font-semibold text-green-700 mr-1 mb-1">
+                                Price: {price} {symbol}
+                            </span>
+                        </div>
+                        {owner === signer._address ?
+                            (
+                                <button
+                                    className="mt-2 w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded transition duration-300"
+                                    onClick={unListProduct}
+                                >
+                                    Unlist Product
+                                </button>
+                            )
+                            :
+                            (
+                                <button
+                                    className="mt-2 w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded transition duration-300"
+                                    onClick={buyProduct}
+                                >
+                                    Buy Product
+                                </button>
+                            )
+                        }
+                    </div>
                 </div>
-            </div>
-        )
-        }
-    </>
+            )
+            }
+        </>
     );
 }
 
