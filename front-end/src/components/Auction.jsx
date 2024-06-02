@@ -324,7 +324,7 @@ function Auction({auctionContract, auctionId, signer}) {
                                     </span>
                                 )}
                             </div>
-                            {signer._address !== auctioneer && !ended && (
+                            {signer._address !== auctioneer && !ended && endTime - Math.floor(Date.now() / 1000) > 0 &&(
                                 <div>
                                     <button
                                         className="mt-2 w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded transition duration-300"
@@ -332,15 +332,21 @@ function Auction({auctionContract, auctionId, signer}) {
                                     >
                                         Place Bid
                                     </button>
+                                </div>
+                            )}
+
+                            {signer._address !== auctioneer && !ended && myBid && !isWinner && (
+                                <div>
                                     <button
-                                        className="mt-2 w-full bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-2 rounded transition duration-300"
+                                        className="mt-2 w-full bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded transition duration-300"
                                         onClick={cancelBid}
                                     >
                                         Cancel Bid
                                     </button>
                                 </div>
-                            )}
-                            {signer._address !== auctioneer && ended && myBid && (
+                                )
+                            }
+                            {signer._address !== auctioneer && ended && !isWinner && myBid && (
                                 <button
                                     className="mt-2 w-full bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded transition duration-300"
                                     onClick={withdraw}
@@ -348,7 +354,7 @@ function Auction({auctionContract, auctionId, signer}) {
                                     Withdraw
                                 </button>
                             )}
-                            {(signer._address === auctioneer || isWinner) && !ended && Math.floor(Date.now() / 1000) - endTime >= 60 && (
+                            {(signer._address === auctioneer || isWinner) && !ended && Math.floor(Date.now() / 1000) - endTime > 60 && (
                                 <div>
                                     <button
                                         className="mt-2 w-full bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded transition duration-300"
