@@ -245,11 +245,12 @@ function Auction({auctionContract, auctionId, signer}) {
         setWaitingTx(true)
         let nfts = localStorage.getItem("nfts") ? JSON.parse(localStorage.getItem("nfts")) : [];
         // check if nft is already claimed by nftId and address
-        if (nfts.find(nft => nft.tokenId.valueOf() === tokenId.valueOf() && nft.address === address)) {
+        if (nfts.find(nft => nft.tokenId.valueOf() === tokenId.valueOf() && nft.address === address && nft.owner === signer._address)) {
             await Sweet.fire({
                 icon: "error",
                 title: "NFT already claimed!",
             });
+            setWaitingTx(false)
             return;
         }
         if (!window.ethereum) {
@@ -270,6 +271,14 @@ function Auction({auctionContract, auctionId, signer}) {
             const contract = new ethers.Contract(address, ERC721abi, provider);
             const uri = await contract.tokenURI(tokenId);
             const owner = await contract.ownerOf(tokenId);
+            if (owner !== signer._address) {
+                await Sweet.fire({
+                    icon: "error",
+                    title: "You are not the owner of this NFT!",
+                });
+                setWaitingTx(false);
+                return;
+            }
             const nft = {
                 tokenId: tokenId,
                 address: address,
@@ -368,7 +377,7 @@ function Auction({auctionContract, auctionId, signer}) {
                                         </button>
                                     </div>
                                 )}
-                                {isWinner && ended && (
+                                {(isWinner || signer._address === auctioneer) && ended && (
                                     <button
                                         className="mt-2 w-full bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded transition duration-300"
                                         onClick={() => claimNFT(nft.tokenId, nft.address)}

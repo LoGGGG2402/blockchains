@@ -1,14 +1,32 @@
-# Sample Hardhat Project
+# NFT Marketplace with Auction
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a
-Hardhat Ignition module that deploys that contract.
+This is a simple NFT Marketplace with Auction. It is built using Hardhat, Ethers.js, React, and Vite.
 
-Try running some of the following tasks:
+Contract written in Solidity with OpenZeppelin library.
 
+### Try running some of the following tasks:
+
+##### For Testing
 ```shell
-npx hardhat help
 npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy_local.js
 ```
+
+##### For Deploying on Sepolia Testnet
+```shell
+npx hardhat run scripts/deploy.js --network sepolia
+```
+
+##### For Deploying on Local Node
+```shell
+npx hardhat node
+npx hardhat run scripts/deploy.js --network localhost
+```
+
+##### For Running Frontend
+##### Please make sure you have contract deployed 
+```shell
+cd frontend
+npm install
+npx vite
+```
+

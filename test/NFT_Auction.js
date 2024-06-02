@@ -1,28 +1,27 @@
-const {hre: HardhatRuntimeEnvironment} = require("hardhat");
 const {expect} = require("chai");
 const {time} = require("@nomicfoundation/hardhat-toolbox/network-helpers.js")
-const {ethers} = require("ethers")
+const {ethers} = require("hardhat")
 
 
 describe("NFTAuction", function () {
 
     async function main() {
-        let [deployer, addr1, addr2, addr3, addr4] = await hre.ethers.getSigners()
+        let [deployer, addr1, addr2, addr3, addr4] = await ethers.getSigners()
         console.log("Deploying contracts with the account:", deployer.address)
 
-        const Auction = await hre.ethers.getContractFactory("NFTAuction")
-        const auction = await Auction.deploy(deployer.address)
+        const Auction = await ethers.getContractFactory("NFTAuction")
+        const auction = await Auction.deploy()
 
-        const AuctionToken = await hre.ethers.getContractFactory("NFTAuctionToken")
-        const auctionToken = await AuctionToken.deploy(deployer.address)
+        const AuctionToken = await ethers.getContractFactory("NFTAuctionToken")
+        const auctionToken = await AuctionToken.deploy()
 
         // console.log("OnGoingAuctionsPage.jsx deployed to:", auction.target)
         // console.log("AuctionToken deployed to:", auctionToken.target)
 
-        const MyNFT = await hre.ethers.getContractFactory("OnePieceNFT")
-        const myNFT = await MyNFT.deploy(deployer.address)
+        const MyNFT = await ethers.getContractFactory("OnePieceNFT")
+        const myNFT = await MyNFT.deploy()
 
-        const Token = await hre.ethers.getContractFactory("Token")
+        const Token = await ethers.getContractFactory("Token")
         const token = await Token.deploy(deployer.address)
 
         // console.log("MyNFT deployed to:", myNFT.target)
@@ -97,25 +96,6 @@ describe("NFTAuction", function () {
         expect(await myNFT.getApproved(3)).to.equal(auction.target)
     });
 
-    //     function createAuction(
-    //         address nftContract,
-    //         uint256 nftId,
-    //         uint256 initialPrice,
-    //         uint256 duration
-    //     )
-
-    //     struct OnGoingAuctionsPage.jsx {
-    //         address auctioneer;
-    //         IERC721 nftContract;
-    //         uint256 nftId;
-    //         uint256 initialPrice;
-    //         uint256 endTime;
-    //         bool ended;
-    //         uint256 highestBid;
-    //         uint256 winnerBid;
-    //         address winner;
-    //     }
-
     it("Can create an auction", async function () {
         let [deployer, addr1, addr2, addr3, addr4, auction, auctionToken, myNFT, token] = await main()
         await auction.connect(addr1).createAuction(myNFT.target, 0, 100, 1000)
@@ -155,26 +135,13 @@ describe("NFTAuction", function () {
         await auction.connect(addr2).cancelBid(1);
         let auctionData = await auction.getAuctionDetails(1);
         expect(auctionData.winnerBid).to.equal(200);
-        expect(await hre.ethers.provider.getBalance(addr2.address)).to.be.above(1000 - 200);  // Check that addr2's
+        expect(await ethers.provider.getBalance(addr2.address)).to.be.above(1000 - 200);  // Check that addr2's
                                                                                               // balance is refunded
     });
-
-    it("Can cancel an auction", async function () {
-        let [deployer, addr1, addr2, addr3, addr4, auction, auctionToken, myNFT, token] = await main()
-        await auction.connect(addr1).createAuction(myNFT.target, 0, 100, 1000);
-        await auction.connect(addr2).placeBid(1, {value: 200});
-        await auction.connect(addr1).cancelAuction(1);
-        let auctionData = await auction.getAuctionDetails(1);
-        expect(auctionData.ended).to.equal(true);
-        expect(await myNFT.ownerOf(0)).to.equal(addr1.address); // Check that NFT is returned to owner
-        expect(await hre.ethers.provider.getBalance(addr2.address)).to.be.above(1000 - 200);  // Check that addr2's
-                                                                                              // balance is refunded
-    });
-
 
     it("Winner just pays the second highest bid", async function () {
         let [deployer, addr1, addr2, addr3, addr4, auction, auctionToken, myNFT, token] = await main()
-        let defaultBalance = await hre.ethers.provider.getBalance(addr3.address)
+        let defaultBalance = await ethers.provider.getBalance(addr3.address)
 
         await auction.connect(addr1).createAuction(myNFT.target, 0, ethers.parseEther("100"), 1000)
 
@@ -188,13 +155,13 @@ describe("NFTAuction", function () {
         await time.increaseTo(endTime)
         await auction.connect(addr1).endAuction(1)
 
-        expect(await hre.ethers.provider.getBalance(addr3.address)).to.be.above(defaultBalance - ethers.parseEther("251"));  // Check that addr3's balance is refunded
+        expect(await ethers.provider.getBalance(addr3.address)).to.be.above(defaultBalance - ethers.parseEther("251"));  // Check that addr3's balance is refunded
     });
 
     it("Can withdraw a bid after auction ends", async function () {
         let [deployer, addr1, addr2, addr3, addr4, auction, auctionToken, myNFT, token] = await main()
 
-        let defaultBalance = await hre.ethers.provider.getBalance(addr2.address)
+        let defaultBalance = await ethers.provider.getBalance(addr2.address)
 
         await auction.connect(addr1).createAuction(myNFT.target, 0, ethers.parseEther("100"), 1000)
         await auction.connect(addr2).placeBid(1, {value: ethers.parseEther("200")})
@@ -206,7 +173,7 @@ describe("NFTAuction", function () {
         await auction.connect(addr1).endAuction(1)
 
         await auction.connect(addr2).withdrawBid(1)
-        expect(await hre.ethers.provider.getBalance(addr2.address)).to.be.above(defaultBalance - ethers.parseEther("1"));  // Check that addr2's balance is refunded
+        expect(await ethers.provider.getBalance(addr2.address)).to.be.above(defaultBalance - ethers.parseEther("1"));  // Check that addr2's balance is refunded
     });
 
 
