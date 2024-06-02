@@ -3,6 +3,7 @@ import {useNavigate} from "react-router-dom";
 import axios from "axios";
 import OnePieceNFT from "../assets/contracts/OnePieceNFT.json";
 import {ethers} from "ethers";
+import Sweet from "sweetalert2";
 
 function createNFTPage({signer}) {
 
@@ -56,20 +57,43 @@ function createNFTPage({signer}) {
                 nfts.push(nft);
                 localStorage.setItem("nfts", JSON.stringify(nfts));
                 console.log("NFT created successfully!");
+                navigate('/my-nft');
             } else {
-                console.error("Error in response:", data);
+                await Sweet.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Something went wrong!',
+                    html: data.message,
+                });
             }
         } catch (error) {
-            console.error("Error creating NFT:", error);
+            await Sweet.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Something went wrong!',
+                html: error.message || error,
+            });
         }
 
         setLoading(false);
-        navigate('/my-nft');
     };
 
 
     return (
-        <div className="p-6 max-w-lg mx-auto bg-white rounded-lg shadow-md mt-4">
+        <div className="p-6 max-w-lg mx-auto bg-white rounded-lg shadow-md mt-4 ">
+            {loading && (
+                <div id="modal-background"
+                     className="fixed inset-0 flex items-center justify-center z-50"
+                >
+                    <div className="absolute inset-0 bg-black opacity-50"></div>
+                    <div className="bg-white p-6 rounded-lg shadow-lg z-10 w-96 relative">
+                        <h2 className="text-2xl mb-4">Waiting for transaction</h2>
+                        <div className="flex flex-col items-center">
+                            <p>Waiting for transaction to be mined...</p>
+                        </div>
+                    </div>
+                </div>
+            )}
             <h1 className="text-3xl font-bold mb-6 text-center">Create NFT</h1>
             <form onSubmit={createNFT} className="flex flex-col gap-6">
                 <div>

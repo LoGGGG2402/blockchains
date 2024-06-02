@@ -115,6 +115,9 @@ function NFTsPage({signer}) {
             await Sweet.fire("Please install MetaMask!", "", "error");
             return;
         }
+
+        setShowModal(true)
+        setModalType("waitingTx")
         let ERC721abi = [
             "function tokenURI(uint256 tokenId) view returns (string)",
             "function approve(address to, uint256 tokenId)",
@@ -234,6 +237,8 @@ function NFTsPage({signer}) {
                 });
             }
         }
+
+        setShowModal(false)
     }
 
     const listProduct = async (nftAddress, nftTokenId) => {
@@ -241,6 +246,9 @@ function NFTsPage({signer}) {
             await Sweet.fire("Please install MetaMask!", "", "error");
             return;
         }
+
+        setShowModal(true)
+        setModalType("waitingTx")
         let ERC721abi = [
             "function tokenURI(uint256 tokenId) view returns (string)",
             "function approve(address to, uint256 tokenId)",
@@ -306,7 +314,7 @@ function NFTsPage({signer}) {
             }
         }
 
-
+        setShowModal(false)
     }
 
     const handleNFTClick = (nft) => {
@@ -436,6 +444,20 @@ function NFTsPage({signer}) {
                             >
                                 &times;
                             </button>
+                        </div>
+                    </div>
+                )}
+                {showModal && modalType === "waitingTx" && (
+                    <div id="modal-background"
+                         className="fixed inset-0 flex items-center justify-center z-50"
+                         onClick={handleOutsideClick}
+                    >
+                        <div className="absolute inset-0 bg-black opacity-50"></div>
+                        <div className="bg-white p-6 rounded-lg shadow-lg z-10 w-96 relative">
+                            <h2 className="text-2xl mb-4">Waiting for transaction</h2>
+                            <div className="flex flex-col items-center">
+                                <p>Waiting for transaction to be mined...</p>
+                            </div>
                         </div>
                     </div>
                 )}

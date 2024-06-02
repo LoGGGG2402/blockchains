@@ -73,7 +73,7 @@ function OnGoingAuctionsPage({signer}) {
     return (
         <div className="container mx-auto p-4">
             <h1 className="text-3xl font-extrabold mb-6 text-center text-gray-800 border-b-2 border-gray-500 pb-2">
-                On Going Auctions
+                All Auctions
             </h1>
             <div className="flex flex-wrap -mx-2">
                 {auctions.map((auction, index) => (
@@ -87,7 +87,7 @@ function OnGoingAuctionsPage({signer}) {
                 ))}
             </div>
             <h1 className="text-3xl font-extrabold mb-6 text-center text-gray-800 border-b-2 border-gray-500 pb-2">
-                On Going Auctions Tokens
+                All Auction Tokens
             </h1>
             <div className="flex flex-wrap -mx-2">
                 {auctionsTokens.map((auctionToken, index) => (

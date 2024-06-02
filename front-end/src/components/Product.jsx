@@ -15,6 +15,7 @@ function Product({marketContract, productId, signer}) {
     const [paymentContract, setPaymentContract] = useState(null);
 
     const [loading, setLoading] = useState(true);
+    const [waitingTx, setWaitingTx] = useState(false);
 
     useEffect(() => {
         const fetchProduct = async () => {
@@ -98,9 +99,9 @@ function Product({marketContract, productId, signer}) {
             });
             return;
         }
+        setWaitingTx(true);
         const contractWithSigner = marketContract.connect(signer);
         try {
-            setLoading(true);
             let tx;
             if (paymentContract) {
                 const value = ethers.utils.parseUnits(price, decimals);
@@ -137,7 +138,7 @@ function Product({marketContract, productId, signer}) {
                 html: JSON.stringify(error.reason || error.message || error),
             });
         } finally {
-            setLoading(false);
+            setWaitingTx(false);
         }
     }
 
@@ -149,6 +150,7 @@ function Product({marketContract, productId, signer}) {
             });
             return;
         }
+        setWaitingTx(true)
         const contractWithSigner = marketContract.connect(signer);
         try {
             const tx = await contractWithSigner.unListProduct(productId);
@@ -172,6 +174,8 @@ function Product({marketContract, productId, signer}) {
                 title: "Failed to un list product.",
                 html: JSON.stringify(error.reason || error.message || error),
             });
+        } finally {
+            setWaitingTx(false);
         }
     }
 
@@ -184,7 +188,8 @@ function Product({marketContract, productId, signer}) {
                     </div>
                 </div>
             ) : (
-                <>
+                <div className={waitingTx ? "blur-sm pointer-events-none" : ""}>
+                    <>
                     <div className="max-w-xs rounded overflow-hidden shadow-md bg-white mx-auto">
                         <img className="w-full h-48 object-cover" src={nft.image} alt={nft.name}/>
                         <div className="px-4 ">
@@ -235,7 +240,8 @@ function Product({marketContract, productId, signer}) {
                             }
                         </div>
                     </div>
-                </>
+                    </>
+                </div>
             )
             }
         </>
