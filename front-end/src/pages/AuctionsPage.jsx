@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
-import { ethers } from "ethers";
+import {useEffect, useState} from "react";
+import {ethers} from "ethers";
 import Auction from "../components/Auction.jsx";
 import NFTAuction from "../assets/contracts/NFTAuction.json";
 import NFTAuctionToken from "../assets/contracts/NFTAuctionToken.json";
 import Sweet from "sweetalert2";
 
-function OnGoingAuctionsPage({ signer }) {
+function OnGoingAuctionsPage({signer}) {
     let [auctions, setAuctions] = useState([]);
     let [auctionsTokens, setAuctionsTokens] = useState([]);
 

@@ -8,16 +8,16 @@ const SEPOLIA_PRIVATE_KEY = process.env.SEPOLIA_PRIVATE_KEY;
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
-  solidity: "0.8.24",
-  networks: {
-    sepolia: {
-      url: `https://sepolia.infura.io/v3/${INFURA_API_KEY}`,
-      accounts: [SEPOLIA_PRIVATE_KEY],
+    solidity: "0.8.24",
+    networks: {
+        sepolia: {
+            url: `https://sepolia.infura.io/v3/${INFURA_API_KEY}`,
+            accounts: [SEPOLIA_PRIVATE_KEY],
+        },
     },
-  },
-  etherscan: {
-    apiKey: {
-        sepolia: process.env.SEPOLIA_API_KEY,
-    }
-  },
+    etherscan: {
+        apiKey: {
+            sepolia: process.env.SEPOLIA_API_KEY,
+        }
+    },
 };

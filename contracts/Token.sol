@@ -10,9 +10,9 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20FlashMint.sol";
 
 contract Token is ERC20, ERC20Burnable, Ownable, ERC20Permit, ERC20FlashMint {
     constructor(address initialOwner)
-        ERC20("Token", "MTK")
-        Ownable(initialOwner)
-        ERC20Permit("Token")
+    ERC20("Token", "MTK")
+    Ownable(initialOwner)
+    ERC20Permit("Token")
     {
         _mint(initialOwner, 100000 * 10 ** decimals());
     }

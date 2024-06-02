@@ -1,5 +1,5 @@
-const { hre:HardhatRuntimeEnvironment } = require("hardhat");
-const { expect } = require("chai");
+const {hre: HardhatRuntimeEnvironment} = require("hardhat");
+const {expect} = require("chai");
 const {time} = require("@nomicfoundation/hardhat-toolbox/network-helpers.js")
 const {ethers} = require("ethers")
 
@@ -65,7 +65,7 @@ describe("NFTAuction", function () {
         // await token.connect(addr3).approve(auctionToken.target, 2000)
         // await token.connect(addr4).approve(auctionToken.target, 2000)
 
-        return[deployer, addr1, addr2, addr3, addr4, auction, auctionToken, myNFT, token]
+        return [deployer, addr1, addr2, addr3, addr4, auction, auctionToken, myNFT, token]
 
     }
 
@@ -150,25 +150,26 @@ describe("NFTAuction", function () {
     it("Can cancel a bid", async function () {
         let [deployer, addr1, addr2, addr3, addr4, auction, auctionToken, myNFT, token] = await main()
         await auction.connect(addr1).createAuction(myNFT.target, 0, 100, 1000);
-        await auction.connect(addr2).placeBid(1, { value: 200 });
-        await auction.connect(addr3).placeBid(1, { value: 300 });
+        await auction.connect(addr2).placeBid(1, {value: 200});
+        await auction.connect(addr3).placeBid(1, {value: 300});
         await auction.connect(addr2).cancelBid(1);
         let auctionData = await auction.getAuctionDetails(1);
         expect(auctionData.winnerBid).to.equal(200);
-        expect(await hre.ethers.provider.getBalance(addr2.address)).to.be.above(1000 - 200);  // Check that addr2's balance is refunded
+        expect(await hre.ethers.provider.getBalance(addr2.address)).to.be.above(1000 - 200);  // Check that addr2's
+                                                                                              // balance is refunded
     });
 
     it("Can cancel an auction", async function () {
         let [deployer, addr1, addr2, addr3, addr4, auction, auctionToken, myNFT, token] = await main()
         await auction.connect(addr1).createAuction(myNFT.target, 0, 100, 1000);
-        await auction.connect(addr2).placeBid(1, { value: 200 });
+        await auction.connect(addr2).placeBid(1, {value: 200});
         await auction.connect(addr1).cancelAuction(1);
         let auctionData = await auction.getAuctionDetails(1);
         expect(auctionData.ended).to.equal(true);
         expect(await myNFT.ownerOf(0)).to.equal(addr1.address); // Check that NFT is returned to owner
-        expect(await hre.ethers.provider.getBalance(addr2.address)).to.be.above(1000 - 200);  // Check that addr2's balance is refunded
+        expect(await hre.ethers.provider.getBalance(addr2.address)).to.be.above(1000 - 200);  // Check that addr2's
+                                                                                              // balance is refunded
     });
-
 
 
     it("Winner just pays the second highest bid", async function () {

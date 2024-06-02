@@ -9,14 +9,13 @@ import OnGoingAuctionsPage from "./pages/OnGoingAuctionsPage.jsx";
 import AuctionsPage from "./pages/AuctionsPage.jsx";
 
 
-
 function App() {
     const [signer, setSigner] = useState(null);
     // const [network, setNetwork] = useState(null);
 
     return (
         <Router>
-                <Navbar signer={signer} setSigner={setSigner}/>
+            <Navbar signer={signer} setSigner={setSigner}/>
 
             <Routes>
                 {/*<Route path="/" element={<NFTsPage/>}/>*/}

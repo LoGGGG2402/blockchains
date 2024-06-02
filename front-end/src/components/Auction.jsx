@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
-import { ethers } from "ethers";
+import {useEffect, useState} from "react";
+import {ethers} from "ethers";
 import axios from "axios";
 import Sweet from "sweetalert2";
 
-function Auction({ auctionContract, auctionId, signer }) {
+function Auction({auctionContract, auctionId, signer}) {
     const [nft, setNft] = useState({});
     const [auctioneer, setAuctioneer] = useState("");
     const [endTime, setEndTime] = useState(0);
@@ -31,7 +31,7 @@ function Auction({ auctionContract, auctionId, signer }) {
             try {
                 const provider = new ethers.providers.Web3Provider(window.ethereum);
                 const auctionInfo = await auctionContract.getAuctionDetails(auctionId);
-                const { auctioneer, nftContract, nftId, endTime, ended, winnerBid, tokenPayment } = auctionInfo;
+                const {auctioneer, nftContract, nftId, endTime, ended, winnerBid, tokenPayment} = auctionInfo;
                 setAuctioneer(auctioneer);
                 setEndTime(endTime);
                 setEnded(ended);
@@ -55,15 +55,13 @@ function Auction({ auctionContract, auctionId, signer }) {
                     image: response.data.image,
                 };
 
-                if (signer){
+                if (signer) {
                     const myBid = await auctionContract.connect(signer).getBidPrice(auctionId);
-                    if (myBid.gt(0))
-                    {
+                    if (myBid.gt(0)) {
                         setMyBid(ethers.utils.formatEther(myBid));
                     }
                     const winner = await auctionContract.connect(signer).isWinner(auctionId);
-                    if (winner)
-                    {
+                    if (winner) {
                         setIsWinner(true);
                     }
                 }
@@ -135,7 +133,7 @@ function Auction({ auctionContract, auctionId, signer }) {
                 const bidAmount = prompt("Enter your bid amount (in ETH):");
                 if (bidAmount) {
                     const amountInWei = ethers.utils.parseEther(bidAmount);
-                    tx = await contractWithSigner.placeBid(auctionId, { value: amountInWei });
+                    tx = await contractWithSigner.placeBid(auctionId, {value: amountInWei});
                 }
             }
             if (tx) {
@@ -150,7 +148,7 @@ function Auction({ auctionContract, auctionId, signer }) {
             await Sweet.fire({
                 icon: "error",
                 title: "Failed to place bid.",
-                html:JSON.stringify(error.reason || error.message || error),
+                html: JSON.stringify(error.reason || error.message || error),
             });
         } finally {
             setLoading(false);
@@ -168,7 +166,7 @@ function Auction({ auctionContract, auctionId, signer }) {
             await Sweet.fire({
                 icon: "error",
                 title: "Failed to cancel bid.",
-                html:JSON.stringify(error.reason || error.message || error),
+                html: JSON.stringify(error.reason || error.message || error),
             });
         }
     }
@@ -185,7 +183,7 @@ function Auction({ auctionContract, auctionId, signer }) {
             await Sweet.fire({
                 icon: "error",
                 title: "Failed to withdraw.",
-                html:JSON.stringify(error.reason || error.message || error),
+                html: JSON.stringify(error.reason || error.message || error),
             });
         }
     }
@@ -201,7 +199,7 @@ function Auction({ auctionContract, auctionId, signer }) {
             await Sweet.fire({
                 icon: "error",
                 title: "Failed to end auction.",
-                html:JSON.stringify(error.reason || error.message || error),
+                html: JSON.stringify(error.reason || error.message || error),
             });
         }
     }
@@ -254,23 +252,27 @@ function Auction({ auctionContract, auctionId, signer }) {
                 </div>
             ) : (
                 <div className="max-w-xs rounded overflow-hidden shadow-md bg-white mx-auto">
-                    <img className="w-full h-48 object-cover" src={nft.image} alt={nft.name} />
+                    <img className="w-full h-48 object-cover" src={nft.image} alt={nft.name}/>
                     <div className="px-4 ">
                         <div className="font-bold text-lg mb-1 text-gray-800 text-center">{nft.name}</div>
                         <p className="text-gray-700 text-sm ">Description: {nft.description}</p>
                     </div>
                     <div className="px-4 py-3 bg-white rounded-b-lg">
                         <div className="flex flex-wrap justify-center">
-                            <span className="block  rounded-full px-2 py-1 text-xs font-semibold text-green-700 mr-1 mb-1">
+                            <span
+                                className="block  rounded-full px-2 py-1 text-xs font-semibold text-green-700 mr-1 mb-1">
                                 Auctioneer: {auctioneer}
                             </span>
-                            <span className="block rounded-full px-2 py-1 text-xs font-semibold text-green-700 mr-1 mb-1">
+                            <span
+                                className="block rounded-full px-2 py-1 text-xs font-semibold text-green-700 mr-1 mb-1">
                                 End Time: {new Date(endTime * 1000).toLocaleString()}
                             </span>
-                            <span className="block  rounded-full px-2 py-1 text-xs font-semibold text-green-700 mr-1 mb-1">
+                            <span
+                                className="block  rounded-full px-2 py-1 text-xs font-semibold text-green-700 mr-1 mb-1">
                                 Ended: {ended ? "Yes" : "No"}
                             </span>
-                            <span className="block  rounded-full px-2 py-1 text-xs font-semibold text-green-700 mr-1 mb-1">
+                            <span
+                                className="block  rounded-full px-2 py-1 text-xs font-semibold text-green-700 mr-1 mb-1">
                                 Winner Bid: {winnerBid} {symbol}
                             </span>
                             {myBid && <span
@@ -302,7 +304,7 @@ function Auction({ auctionContract, auctionId, signer }) {
                                 Withdraw
                             </button>
                         )}
-                        {signer._address === auctioneer || isWinner && !ended && Math.floor(Date.now() / 1000) -endTime >= 60 && (
+                        {signer._address === auctioneer || isWinner && !ended && Math.floor(Date.now() / 1000) - endTime >= 60 && (
                             <div>
                                 <button
                                     className="mt-2 w-full bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded transition duration-300"

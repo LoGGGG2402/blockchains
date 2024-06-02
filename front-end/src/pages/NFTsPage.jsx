@@ -8,7 +8,7 @@ import NFTAuction from "../assets/contracts/NFTAuction.json";
 import NFTAuctionToken from "../assets/contracts/NFTAuctionToken.json";
 import NFTMarket from "../assets/contracts/NFTMarket.json";
 
-function NFTsPage({ signer }) {
+function NFTsPage({signer}) {
     const [nfts, setNfts] = useState([]);
     const [address, setAddress] = useState("");
     const [tokenId, setTokenId] = useState("");
@@ -18,7 +18,6 @@ function NFTsPage({ signer }) {
     const modalRef = useRef(null);
 
     const [chosenNFT, setChosenNFT] = useState(null);
-
 
 
     useEffect(() => {
@@ -44,7 +43,7 @@ function NFTsPage({ signer }) {
                 await Sweet.fire({
                     icon: "error",
                     title: "Failed to place bid.",
-                    html:JSON.stringify(error.reason || error.message || error),
+                    html: JSON.stringify(error.reason || error.message || error),
                 });
             }
         }
@@ -229,7 +228,7 @@ function NFTsPage({ signer }) {
                 await Sweet.fire({
                     icon: "error",
                     title: "Failed to place bid.",
-                    html:JSON.stringify(error.reason || error.message || error),
+                    html: JSON.stringify(error.reason || error.message || error),
                 });
             }
 
@@ -301,7 +300,7 @@ function NFTsPage({ signer }) {
                 await Sweet.fire({
                     icon: "error",
                     title: "Failed to place bid.",
-                    html:JSON.stringify(error.reason || error.message || error),
+                    html: JSON.stringify(error.reason || error.message || error),
                 });
             }
         }
@@ -338,7 +337,7 @@ function NFTsPage({ signer }) {
             await Sweet.fire({
                 icon: "error",
                 title: "Failed to place bid.",
-                html:JSON.stringify(error.reason || error.message || error),
+                html: JSON.stringify(error.reason || error.message || error),
             });
             return false;
         }

@@ -1,5 +1,5 @@
 import {useState} from "react";
-import { useNavigate } from "react-router-dom";
+import {useNavigate} from "react-router-dom";
 import axios from "axios";
 import OnePieceNFT from "../assets/contracts/OnePieceNFT.json";
 import {ethers} from "ethers";
@@ -62,7 +62,7 @@ function createNFTPage({signer}) {
         } catch (error) {
             console.error("Error creating NFT:", error);
         }
-        
+
         setLoading(false);
         navigate('/my-nft');
     };
@@ -85,7 +85,8 @@ function createNFTPage({signer}) {
                 </div>
 
                 <div>
-                    <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description:</label>
+                    <label htmlFor="description"
+                           className="block text-sm font-medium text-gray-700">Description:</label>
                     <input
                         type="text"
                         id="description"

@@ -4,7 +4,7 @@ import {useEffect} from 'react';
 import {ethers} from "ethers";
 import Sweet from "sweetalert2";
 
-function Navbar({ signer, setSigner }){
+function Navbar({signer, setSigner}) {
     const connectWallet = async () => {
         try {
             if (!window.ethereum) {
@@ -67,7 +67,8 @@ function Navbar({ signer, setSigner }){
             <ul className="flex space-x-8">
                 <Link className="text-gray-700 hover:text-blue-500 transition" to={"/my-nft"}>My NFT</Link>
                 <Link className="text-gray-700 hover:text-blue-500 transition" to={"/auction"}>Auction</Link>
-                <Link className="text-gray-700 hover:text-blue-500 transition" to={"/ongoing-auction"}>On Going Auction</Link>
+                <Link className="text-gray-700 hover:text-blue-500 transition" to={"/ongoing-auction"}>On Going
+                    Auction</Link>
                 <Link className="text-gray-700 hover:text-blue-500 transition" to={"/create-nft"}>Create NFT</Link>
             </ul>
 

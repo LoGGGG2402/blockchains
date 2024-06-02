@@ -3,7 +3,7 @@ import {useEffect, useState} from "react";
 import {ethers} from "ethers";
 import axios from "axios";
 
-function Product({ marketContract, productId, signer }) {
+function Product({marketContract, productId, signer}) {
     const [owner, setOwner] = useState("");
     const [nft, setNft] = useState({});
 
@@ -121,7 +121,7 @@ function Product({ marketContract, productId, signer }) {
             await Sweet.fire({
                 icon: "error",
                 title: "Failed to buy product.",
-                html:JSON.stringify(error.reason || error.message || error),
+                html: JSON.stringify(error.reason || error.message || error),
             });
         } finally {
             setLoading(false);
@@ -148,7 +148,7 @@ function Product({ marketContract, productId, signer }) {
             await Sweet.fire({
                 icon: "error",
                 title: "Failed to un list product.",
-                html:JSON.stringify(error.reason || error.message || error),
+                html: JSON.stringify(error.reason || error.message || error),
             });
         }
     }
@@ -172,7 +172,8 @@ function Product({ marketContract, productId, signer }) {
                                 className="block  rounded-full px-2 py-1 text-xs font-semibold text-green-700 mr-1 mb-1">
                                 Owner: {owner}
                             </span>
-                            <span className="block  rounded-full px-2 py-1 text-xs font-semibold text-green-700 mr-1 mb-1">
+                            <span
+                                className="block  rounded-full px-2 py-1 text-xs font-semibold text-green-700 mr-1 mb-1">
                                 Price: {price} {symbol}
                             </span>
                         </div>

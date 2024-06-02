@@ -193,7 +193,7 @@ contract NFTAuctionToken is IERC721Receiver, ReentrancyGuard {
         _bids[auctionId][msg.sender] = currentBid;
 
         if (currentBid > auction.highestBid) {
-            if (auction.winner != msg.sender){
+            if (auction.winner != msg.sender) {
                 auction.winnerBid = auction.highestBid;
                 auction.highestBid = currentBid;
                 auction.winner = msg.sender;
@@ -301,8 +301,8 @@ contract NFTAuctionToken is IERC721Receiver, ReentrancyGuard {
     ) external pure override returns (bytes4) {
         return
             bytes4(
-                keccak256("onERC721Received(address,address,uint256,bytes)")
-            );
+            keccak256("onERC721Received(address,address,uint256,bytes)")
+        );
     }
 
     // get functions

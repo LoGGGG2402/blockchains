@@ -10,8 +10,8 @@ contract OnePieceNFT is ERC721, ERC721URIStorage, Ownable {
     uint256 private _nextTokenId;
 
     constructor()
-        ERC721("OnePieceNFT", "ONF")
-        Ownable(msg.sender)
+    ERC721("OnePieceNFT", "ONF")
+    Ownable(msg.sender)
     {}
 
     function safeMint(address to, string memory uri) public onlyOwner returns (uint256){
@@ -30,19 +30,19 @@ contract OnePieceNFT is ERC721, ERC721URIStorage, Ownable {
 
     // The following functions are overrides required by Solidity.
     function tokenURI(uint256 tokenId)
-        public
-        view
-        override(ERC721, ERC721URIStorage)
-        returns (string memory)
+    public
+    view
+    override(ERC721, ERC721URIStorage)
+    returns (string memory)
     {
         return super.tokenURI(tokenId);
     }
 
     function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override(ERC721, ERC721URIStorage)
-        returns (bool)
+    public
+    view
+    override(ERC721, ERC721URIStorage)
+    returns (bool)
     {
         return super.supportsInterface(interfaceId);
     }

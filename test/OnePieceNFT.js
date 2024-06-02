@@ -1,5 +1,5 @@
-const { hre:HardhatRuntimeEnvironment } = require("hardhat");
-const { expect } = require("chai");
+const {hre: HardhatRuntimeEnvironment} = require("hardhat");
+const {expect} = require("chai");
 
 describe("OnePieceNFT", function () {
     it('should deploy NFT Contract', async () => {
