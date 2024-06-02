@@ -116,12 +116,8 @@ contract NFTAuctionToken is IERC721Receiver, ReentrancyGuard {
             "NFTAuction: Not the owner of the NFT"
         );
         require(
-            tokenPayment != address(0),
-            "NFTAuction: Invalid token contract address"
-        );
-        require(
-            IERC165(tokenPayment).supportsInterface(type(IERC20).interfaceId),
-            "NFTAuction: Contract does not support ERC20 interface"
+            IERC20(tokenPayment).totalSupply() > 0,
+            "Invalid ERC20 token"
         );
         require(
             initialPrice > 0,

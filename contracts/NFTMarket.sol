@@ -32,7 +32,8 @@ contract NFTMarket is IERC721Receiver, ReentrancyGuard {
         require(IERC165(_nftContract).supportsInterface(type(IERC721).interfaceId), "Not an ERC721 contract");
         // Ensure _tokenPayment is a valid ERC20 token or ETH address
         if (_tokenPayment != address(0)) {
-            require(IERC165(_tokenPayment).supportsInterface(type(IERC20).interfaceId), "Payment token not ERC20");
+            // check valid IERC20
+            require(IERC20(_tokenPayment).totalSupply() > 0, "Invalid ERC20 token");
         }
 
         IERC721 nftContract = IERC721(_nftContract);
