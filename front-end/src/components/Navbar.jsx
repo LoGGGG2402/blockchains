@@ -50,7 +50,7 @@ function Navbar({signer, setSigner}) {
             <ul className="flex space-x-8">
                 <Link className="text-gray-700 hover:text-blue-500 transition" to={"/my-nft"}>My NFT</Link>
                 <Link className="text-gray-700 hover:text-blue-500 transition" to={"/auction"}>Auction</Link>
-                <Link className="text-gray-700 hover:text-blue-500 transition" to={"/ongoing-auction"}>On Going Auction</Link>
+                <Link className="text-gray-700 hover:text-blue-500 transition" to={"/"}>NFT market</Link>
                 <Link className="text-gray-700 hover:text-blue-500 transition" to={"/create-nft"}>Create NFT</Link>
             </ul>
             <Link className="flex items-center space-x-3" to={"/"}>
