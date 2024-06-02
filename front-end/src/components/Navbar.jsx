@@ -38,7 +38,7 @@ function Navbar({ signer, setSigner }) {
     };
 
     useEffect(() => {
-        connectWallet();
+        connectWallet().then()
     }, []);
 
     return (
