@@ -163,15 +163,16 @@ contract NFTAuction is IERC721Receiver, ReentrancyGuard {
             "NFTAuction: Bid must be higher than the current highest bid"
         );
 
-        if (block.timestamp + EXTENSION_DURATION > auction.endTime) {
-            auction.endTime += EXTENSION_DURATION;
-            emit AuctionExtended(auctionId, auction.endTime);
-        }
-
         _bids[auctionId][msg.sender] = currentBid;
 
         if (currentBid > auction.highestBid) {
             if (auction.winner != msg.sender) {
+
+                if (block.timestamp + EXTENSION_DURATION > auction.endTime) {
+                    auction.endTime += EXTENSION_DURATION;
+                    emit AuctionExtended(auctionId, auction.endTime);
+                }
+
                 auction.winnerBid = auction.highestBid;
                 auction.highestBid = currentBid;
                 auction.winner = msg.sender;

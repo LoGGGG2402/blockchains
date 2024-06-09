@@ -181,15 +181,17 @@ contract NFTAuctionToken is IERC721Receiver, ReentrancyGuard {
 
         auction.tokenPayment.safeTransferFrom(msg.sender, address(this), bidAmount);
 
-        if (block.timestamp + EXTENSION_DURATION > auction.endTime) {
-            auction.endTime += EXTENSION_DURATION;
-            emit AuctionExtended(auctionId, auction.endTime);
-        }
-
         _bids[auctionId][msg.sender] = currentBid;
 
         if (currentBid > auction.highestBid) {
             if (auction.winner != msg.sender) {
+
+
+                if (block.timestamp + EXTENSION_DURATION > auction.endTime) {
+                    auction.endTime += EXTENSION_DURATION;
+                    emit AuctionExtended(auctionId, auction.endTime);
+                }
+
                 auction.winnerBid = auction.highestBid;
                 auction.highestBid = currentBid;
                 auction.winner = msg.sender;
